@@ -1,6 +1,17 @@
 # SAT+RL: Reinforcement Learning for SAT Problem Solving
 
-This project explores different multi-agent reinforcement learning approaches for solving Boolean satisfiability (SAT) problems.
+This project explores different multi-agent reinforcement learning approaches for solving Boolean satisfiability (SAT) problems, working toward a novel hybrid framework that integrates RL with other techniques for constraint satisfaction problems.
+
+## Research Overview
+
+This project is part of broader research into hybrid approaches for constraint-satisfying solution space exploration. Traditional SAT solvers, while powerful, are limited by search-based heuristics and scalability constraints. Our work seeks to bridge this gap by:
+
+- Using intelligent agents to generate candidate solutions
+- Employing SAT solvers as verifiers to validate constraints
+- Providing reinforcement learning-based feedback to optimize agent behavior over time
+- Implementing multi-agent communications to explore distinct regions of the solution space
+
+The current implementation focuses on reinforcement learning approaches, with plans to incorporate generative models in future work.
 
 ## Approaches Implemented
 
@@ -23,6 +34,7 @@ This project explores different multi-agent reinforcement learning approaches fo
 - `compare_oracle_weights.py` - Analysis of oracle influence weights
 - `parameter_sweep.py` - Hyperparameter optimization
 - `visualize_communication.py` - Visualization of agent communication patterns
+- `research.md` - Research proposal and theoretical framework
 
 ## Getting Started
 
@@ -73,10 +85,22 @@ The project demonstrates several key findings:
 
 ## Future Work
 
-- Extend to more complex SAT problem families
-- Implement hybrid approaches combining cooperation and competition
-- Explore more sophisticated communication protocols
-- Apply to other constraint satisfaction problems
+This implementation is an initial step toward our broader research goals. Future plans include:
+
+- Integrating Generative Adversarial Networks (GANs) to intelligently generate candidate solutions
+- Expanding the multi-agent communication protocols based on constraint satisfaction quality
+- Designing more sophisticated reward functions that balance exploration vs. exploitation
+- Testing on larger-scale problems including those in the phase transition zone
+- Applying the hybrid approach to related constraint satisfaction problems
+
+## Applications
+
+The techniques developed here have potential applications in:
+- Cryptographic key generation with constraints
+- Hardware verification optimization
+- Complex scheduling and resource allocation problems
+- Energy systems and smart grid optimization
+- Automated drug discovery and bioinformatics
 
 ## License
 
