@@ -5,6 +5,10 @@ import os
 import seaborn as sns
 from collections import Counter
 
+# Define image directory
+IMAGES_DIR = 'images'
+os.makedirs(IMAGES_DIR, exist_ok=True)
+
 def load_metrics(filename):
     """Load metrics from a pickle file"""
     with open(filename, 'rb') as f:
@@ -37,8 +41,9 @@ def visualize_variable_communication(metrics, problem_name=""):
     plt.ylabel('Communication Count')
     plt.title(f'Most Frequently Communicated Variable Assignments {problem_name}')
     plt.tight_layout()
-    plt.savefig(f"comm_variables_{problem_name}.png")
-    print(f"Saved variable communication visualization to comm_variables_{problem_name}.png")
+    output_path = os.path.join(IMAGES_DIR, f"comm_variables_{problem_name}.png")
+    plt.savefig(output_path)
+    print(f"Saved variable communication visualization to {output_path}")
     plt.close()
 
 def visualize_clause_satisfaction(metrics, problem=None):
@@ -74,8 +79,9 @@ def visualize_clause_satisfaction(metrics, problem=None):
         plt.ylabel('Times Satisfied in Communications')
         plt.title(f'Clause Satisfaction in Communication ({problem_name})')
         plt.tight_layout()
-        plt.savefig(f"comm_clauses_{problem_name}.png")
-        print(f"Saved clause communication visualization to comm_clauses_{problem_name}.png")
+        output_path = os.path.join(IMAGES_DIR, f"comm_clauses_{problem_name}.png")
+        plt.savefig(output_path)
+        print(f"Saved clause communication visualization to {output_path}")
         plt.close()
     else:
         print("No clause satisfaction data found")
@@ -115,8 +121,9 @@ def visualize_communication_heatmap(metrics, problem=None):
     plt.ylabel('Variables')
     plt.title(f'Variable-Clause Satisfaction Correlation ({problem_name})')
     plt.tight_layout()
-    plt.savefig(f"comm_heatmap_{problem_name}.png")
-    print(f"Saved communication heatmap to comm_heatmap_{problem_name}.png")
+    output_path = os.path.join(IMAGES_DIR, f"comm_heatmap_{problem_name}.png")
+    plt.savefig(output_path)
+    print(f"Saved communication heatmap to {output_path}")
     plt.close()
 
 def visualize_reward_distribution(metrics, problem=None):
@@ -139,8 +146,9 @@ def visualize_reward_distribution(metrics, problem=None):
     plt.ylabel('Frequency')
     plt.title(f'Reward Distribution in Communications ({problem_name})')
     plt.grid(True, alpha=0.3)
-    plt.savefig(f"comm_rewards_{problem_name}.png")
-    print(f"Saved reward distribution to comm_rewards_{problem_name}.png")
+    output_path = os.path.join(IMAGES_DIR, f"comm_rewards_{problem_name}.png")
+    plt.savefig(output_path)
+    print(f"Saved reward distribution to {output_path}")
     plt.close()
 
 def visualize_communication_over_time(metrics, problem=None):
@@ -173,8 +181,9 @@ def visualize_communication_over_time(metrics, problem=None):
     plt.ylabel('Number of Communications')
     plt.title(f'Communication Frequency Over Time ({problem_name})')
     plt.grid(True, alpha=0.3)
-    plt.savefig(f"comm_over_time_{problem_name}.png")
-    print(f"Saved communication over time visualization to comm_over_time_{problem_name}.png")
+    output_path = os.path.join(IMAGES_DIR, f"comm_over_time_{problem_name}.png")
+    plt.savefig(output_path)
+    print(f"Saved communication over time visualization to {output_path}")
     plt.close()
 
 def visualize_all_communication_metrics(metrics, problem=None):
@@ -206,9 +215,10 @@ def run_communication_visualization():
 if __name__ == "__main__":
     # See if we have saved metrics
     problem_name = "medium_standard"
-    if os.path.exists(f"comm_metrics_{problem_name}.pkl"):
-        print(f"Loading existing metrics from comm_metrics_{problem_name}.pkl")
-        with open(f"comm_metrics_{problem_name}.pkl", "rb") as f:
+    pickle_path = f"comm_metrics_{problem_name}.pkl"
+    if os.path.exists(pickle_path):
+        print(f"Loading existing metrics from {pickle_path}")
+        with open(pickle_path, "rb") as f:
             metrics = pickle.load(f)
         from sat_problems import MEDIUM_PROBLEM
         visualize_all_communication_metrics(metrics, MEDIUM_PROBLEM)

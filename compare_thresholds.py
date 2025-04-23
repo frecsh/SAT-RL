@@ -6,6 +6,10 @@ import os
 from multi_q_sat_comm import main as run_communicating_agents
 from sat_problems import MEDIUM_PROBLEM, PHASE_PROBLEM
 
+# Define image directory
+IMAGES_DIR = 'images'
+os.makedirs(IMAGES_DIR, exist_ok=True)
+
 def compare_communication_thresholds(problem=None, thresholds=None, runs_per_threshold=3):
     """
     Run experiments with different communication thresholds and compare results
@@ -77,7 +81,8 @@ def visualize_threshold_comparison(results, problem_name):
     for i, rate in enumerate(success_rates):
         plt.text(i, rate + 0.05, f'{rate*100:.0f}%', ha='center')
     plt.tight_layout()
-    plt.savefig(f"threshold_success_{problem_name}.png")
+    output_path = os.path.join(IMAGES_DIR, f"threshold_success_{problem_name}.png")
+    plt.savefig(output_path)
     plt.close()
     
     # --- 2. Episodes to solution comparison ---
@@ -98,7 +103,8 @@ def visualize_threshold_comparison(results, problem_name):
         plt.ylabel('Episodes to Solution')
         plt.title(f'Episodes to Solution by Threshold ({problem_name})')
         plt.grid(True, alpha=0.3)
-        plt.savefig(f"threshold_episodes_{problem_name}.png")
+        output_path = os.path.join(IMAGES_DIR, f"threshold_episodes_{problem_name}.png")
+        plt.savefig(output_path)
     plt.close()
     
     # --- 3. Communication volume comparison ---
@@ -129,7 +135,8 @@ def visualize_threshold_comparison(results, problem_name):
     plt.ylabel('Communication Volume')
     plt.title(f'Communication Volume by Threshold ({problem_name})')
     plt.tight_layout()
-    plt.savefig(f"threshold_volume_{problem_name}.png")
+    output_path = os.path.join(IMAGES_DIR, f"threshold_volume_{problem_name}.png")
+    plt.savefig(output_path)
     plt.close()
     
     # --- 4. Runtime comparison ---
@@ -148,7 +155,8 @@ def visualize_threshold_comparison(results, problem_name):
     plt.ylabel('Runtime (seconds)')
     plt.title(f'Average Runtime by Threshold ({problem_name})')
     plt.tight_layout()
-    plt.savefig(f"threshold_runtime_{problem_name}.png")
+    output_path = os.path.join(IMAGES_DIR, f"threshold_runtime_{problem_name}.png")
+    plt.savefig(output_path)
     plt.close()
 
 def run_phase_transition_test():

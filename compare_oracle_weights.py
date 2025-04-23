@@ -5,6 +5,10 @@ import glob
 import os
 from sat_problems import MEDIUM_PROBLEM
 
+# Define image directory
+IMAGES_DIR = 'images'
+os.makedirs(IMAGES_DIR, exist_ok=True)
+
 def load_metrics(filename):
     """Load metrics from a pickle file"""
     with open(filename, 'rb') as f:
@@ -116,8 +120,9 @@ def visualize_weight_comparison(results, weights, problem_name):
     plt.title(f'Best Reward Achieved by Oracle Weight ({problem_name})')
     
     plt.tight_layout()
-    plt.savefig(f"oracle_weight_comparison_{problem_name}.png")
-    print(f"Saved comparison to oracle_weight_comparison_{problem_name}.png")
+    output_path = os.path.join(IMAGES_DIR, f"oracle_weight_comparison_{problem_name}.png")
+    plt.savefig(output_path)
+    print(f"Saved comparison to {output_path}")
     
 def visualize_clause_difficulty_comparison(results, weights, problem_name):
     """Compare clause difficulty patterns across oracle weights"""
@@ -156,8 +161,9 @@ def visualize_clause_difficulty_comparison(results, weights, problem_name):
     plt.title("Legend")
     
     plt.tight_layout()
-    plt.savefig(f"oracle_clause_difficulty_{problem_name}.png")
-    print(f"Saved clause difficulty comparison to oracle_clause_difficulty_{problem_name}.png")
+    output_path = os.path.join(IMAGES_DIR, f"oracle_clause_difficulty_{problem_name}.png")
+    plt.savefig(output_path)
+    print(f"Saved clause difficulty comparison to {output_path}")
 
 def compare_learning_curves(results, weights, problem_name):
     """Compare learning curves across oracle weights"""
@@ -176,8 +182,9 @@ def compare_learning_curves(results, weights, problem_name):
     plt.grid(True, alpha=0.3)
     
     plt.tight_layout()
-    plt.savefig(f"oracle_learning_curves_{problem_name}.png")
-    print(f"Saved learning curves to oracle_learning_curves_{problem_name}.png")
+    output_path = os.path.join(IMAGES_DIR, f"oracle_learning_curves_{problem_name}.png")
+    plt.savefig(output_path)
+    print(f"Saved learning curves to {output_path}")
 
 if __name__ == "__main__":
     results = compare_oracle_weights()

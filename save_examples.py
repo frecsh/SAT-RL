@@ -3,12 +3,15 @@ import shutil
 import glob
 
 """
-This script copies selected visualization outputs to the examples directory
-for inclusion in the GitHub repository.
+This script copies selected visualization outputs from the images directory 
+to the examples directory for inclusion in the GitHub repository.
 """
 
 # Create examples directory if it doesn't exist
 os.makedirs('examples', exist_ok=True)
+
+# Define image directory
+IMAGES_DIR = 'images'
 
 # Define patterns to copy
 patterns = [
@@ -30,8 +33,19 @@ patterns = [
 # Copy matched files to examples directory
 copied_files = []
 for pattern in patterns:
+    # Look in images directory
+    for file in glob.glob(os.path.join(IMAGES_DIR, pattern)):
+        dest_file = os.path.join('examples', os.path.basename(file))
+        try:
+            shutil.copy2(file, dest_file)
+            copied_files.append(dest_file)
+            print(f"Copied: {file} → {dest_file}")
+        except Exception as e:
+            print(f"Failed to copy {file}: {str(e)}")
+    
+    # Also check the root directory in case some files haven't been moved yet
     for file in glob.glob(pattern):
-        dest_file = os.path.join('examples', file)
+        dest_file = os.path.join('examples', os.path.basename(file))
         try:
             shutil.copy2(file, dest_file)
             copied_files.append(dest_file)
