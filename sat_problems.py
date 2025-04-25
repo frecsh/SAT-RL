@@ -1,123 +1,275 @@
+#!/usr/bin/env python3
+"""
+Functions for generating and manipulating SAT problems.
+"""
+
 import random
 import numpy as np
+from typing import List, Tuple, Set, Optional
 
-# Define the generate_random_sat function first
-def generate_random_sat(num_vars, num_clauses, clause_length=3):
-    """Generate a random SAT problem"""
+def generate_sat_problem(n_vars: int, n_clauses: int, clause_length: int = 3, seed: Optional[int] = None) -> List[List[int]]:
+    """
+    Generate a random k-SAT problem.
+    
+    Args:
+        n_vars: Number of variables
+        n_clauses: Number of clauses
+        clause_length: Number of literals per clause (default: 3 for 3-SAT)
+        seed: Random seed for reproducibility
+        
+    Returns:
+        List of clauses, where each clause is a list of literals
+    """
+    if seed is not None:
+        random.seed(seed)
+        np.random.seed(seed)
+    
     clauses = []
-    for _ in range(num_clauses):
-        # Generate a clause with unique variables
-        variables = random.sample(range(1, num_vars + 1), clause_length)
-        clause = []
-        for var in variables:
-            sign = random.choice([1, -1])
-            clause.append(var * sign)
+    
+    for _ in range(n_clauses):
+        # Select random variables for this clause
+        vars_in_clause = random.sample(range(1, n_vars + 1), clause_length)
+        
+        # Randomly negate some variables
+        clause = [var if random.random() < 0.5 else -var for var in vars_in_clause]
+        
         clauses.append(clause)
     
-    return {
-        "name": f"random_{num_vars}v_{num_clauses}c",
-        "clauses": clauses,
-        "num_vars": num_vars
-    }
+    return clauses
 
-# Collection of SAT problems for testing
-
-# Original small problem (3 variables, 3 clauses)
-SMALL_PROBLEM = {
-    "name": "small_basic",
-    "clauses": [[1, -2, 3], [-1, 2], [2, -3]],
-    "num_vars": 3
-}
-
-# Medium sized problem (10 variables, 16 clauses) 
-MEDIUM_PROBLEM = {
-    "name": "medium_standard",
-    "clauses": [
-        [1, -3, 5], [-1, 2, 7], [2, -4, -8], [3, 6, -9],
-        [-2, 5, 10], [-5, -7, 8], [4, 9, -10], [-3, -6, 8],
-        [1, -7, -10], [3, -5, -8], [2, 4, 9], [-1, -4, 6],
-        [5, 8, -9], [-2, -6, 10], [1, 3, -8], [-4, 7, 9]
-    ],
-    "num_vars": 10
-}
-
-# Hard problem (15 variables, 40 clauses)
-HARD_PROBLEM = {
-    "name": "hard_complex",
-    "clauses": [
-        [1, -2, 3], [-1, 4, 5], [2, -6, 7], [-3, -4, 8], 
-        [5, -7, -9], [6, 10, 11], [-8, -10, 12], [9, -11, -13],
-        [1, -5, -10], [-2, 6, -12], [3, 7, 13], [4, -8, 14],
-        [-6, -9, 15], [8, 10, -14], [-7, 11, -15], [1, 2, 9],
-        [-3, -5, -11], [4, 6, 12], [-1, 8, 13], [2, -10, 14],
-        [-4, 7, 15], [3, 9, -12], [5, -8, -13], [-2, -7, -14],
-        [1, 10, -15], [4, -6, 11], [-5, 7, 12], [2, -9, -13],
-        [3, 6, 14], [-1, -8, 15], [5, -10, -11], [-3, 8, -12],
-        [-4, 9, 13], [6, -7, -14], [1, -5, 15], [-2, 4, 11],
-        [3, -6, -13], [7, 8, 10], [-9, 12, 14], [5, -11, -15]
-    ],
-    "num_vars": 15
-}
-
-# A problem known to be UNSAT (unsatisfiable)
-UNSAT_PROBLEM = {
-    "name": "unsat_example",
-    "clauses": [
-        [1], [2], [3], [-1, -2, -3]  # Forces 1=True, 2=True, 3=True, but also one must be False
-    ],
-    "num_vars": 3
-}
-
-# Phase transition problem (clause-to-var ratio ~4.3, known to be hard)
-PHASE_PROBLEM = generate_random_sat(20, 85)  # 20 variables, 85 clauses
-PHASE_PROBLEM["name"] = "phase_transition"
-
-def is_satisfiable(problem, max_checks=10000):
-    """Check if a SAT problem is satisfiable (brute force for small problems)"""
-    num_vars = problem["num_vars"]
-    clauses = problem["clauses"]
+def load_sat_from_file(filepath: str) -> Tuple[List[List[int]], int]:
+    """
+    Load a SAT problem from a DIMACS CNF file.
     
-    if num_vars > 10:
-        # For larger problems, try random assignments
-        for _ in range(max_checks):
-            assignment = {var: random.choice([True, False]) for var in range(1, num_vars+1)}
-            if check_assignment(assignment, clauses):
-                return True, assignment
-        return None, None  # Unknown if satisfiable
+    Args:
+        filepath: Path to the CNF file
         
-    # For small problems, check all possible assignments (2^n)
-    for i in range(2**num_vars):
-        # Convert i to binary representation as assignment
-        assignment = {}
-        for var in range(1, num_vars + 1):
-            assignment[var] = ((i >> (var-1)) & 1) == 1  # Convert to boolean
+    Returns:
+        Tuple of (clauses, n_vars)
+    """
+    clauses = []
+    n_vars = 0
+    
+    with open(filepath, 'r', errors='ignore') as f:
+        current_clause = []
         
-        if check_assignment(assignment, clauses):
-            return True, assignment
+        for line in f:
+            line = line.strip()
             
-    return False, None  # Definitely unsatisfiable
+            # Skip comments
+            if line.startswith('c'):
+                continue
+            
+            # Process problem line (p cnf <vars> <clauses>)
+            if line.startswith('p cnf'):
+                parts = line.split()
+                if len(parts) >= 4:
+                    try:
+                        n_vars = int(parts[2])
+                    except ValueError:
+                        # Try to extract from filename if parsing fails
+                        filename = filepath.split('/')[-1]
+                        if 'uf' in filename:
+                            try:
+                                n_vars = int(filename.split('-')[0].replace('uf', ''))
+                            except ValueError:
+                                n_vars = 100  # Default if all else fails
+                continue
+            
+            # Process literals
+            try:
+                for token in line.split():
+                    if token in ['%', '0%']:  # Handle special characters
+                        continue
+                    
+                    lit = int(token)
+                    
+                    if lit == 0:  # End of clause
+                        if current_clause:
+                            clauses.append(current_clause)
+                            current_clause = []
+                    else:
+                        current_clause.append(lit)
+            except ValueError:
+                # Skip lines with parsing errors
+                continue
+        
+        # Don't forget the last clause if file doesn't end with 0
+        if current_clause:
+            clauses.append(current_clause)
+    
+    # If we couldn't determine n_vars from the file, estimate from the clauses
+    if n_vars == 0 and clauses:
+        n_vars = max([abs(lit) for clause in clauses for lit in clause])
+    
+    return clauses, n_vars
 
-def check_assignment(assignment, clauses):
-    """Check if an assignment satisfies all clauses"""
+def is_satisfied(clauses: List[List[int]], assignment: List[int]) -> bool:
+    """
+    Check if a given assignment satisfies all clauses.
+    
+    Args:
+        clauses: List of clauses, where each clause is a list of literals
+        assignment: List of variable assignments (positive = True, negative = False)
+        
+    Returns:
+        True if all clauses are satisfied, False otherwise
+    """
+    # Convert assignment list to a set for O(1) lookups
+    true_lits = set(assignment)
+    
     for clause in clauses:
-        clause_satisfied = False
+        # A clause is satisfied if any of its literals is satisfied
+        satisfied = False
+        
         for lit in clause:
-            var = abs(lit)
-            if (lit > 0 and assignment[var]) or (lit < 0 and not assignment[var]):
-                clause_satisfied = True
+            if lit in true_lits:
+                satisfied = True
                 break
-        if not clause_satisfied:
+        
+        if not satisfied:
             return False
-    return True  # All clauses are satisfied
+    
+    return True
 
-# Generate a collection of random problems of different sizes
-PROBLEM_COLLECTION = [
-    SMALL_PROBLEM,
-    MEDIUM_PROBLEM,
-    HARD_PROBLEM,
-    UNSAT_PROBLEM,
-    generate_random_sat(5, 10),
-    generate_random_sat(10, 20),
-    generate_random_sat(15, 35),
-    PHASE_PROBLEM
-]
+def count_satisfied_clauses(clauses: List[List[int]], assignment: List[int]) -> int:
+    """
+    Count how many clauses are satisfied by a given assignment.
+    
+    Args:
+        clauses: List of clauses, where each clause is a list of literals
+        assignment: List of variable assignments (positive = True, negative = False)
+        
+    Returns:
+        Number of satisfied clauses
+    """
+    # Convert assignment list to a set for O(1) lookups
+    true_lits = set(assignment)
+    
+    satisfied_count = 0
+    
+    for clause in clauses:
+        # A clause is satisfied if any of its literals is satisfied
+        for lit in clause:
+            if lit in true_lits:
+                satisfied_count += 1
+                break
+    
+    return satisfied_count
+
+def random_assignment(n_vars: int, seed: Optional[int] = None) -> List[int]:
+    """
+    Generate a random assignment for a SAT problem.
+    
+    Args:
+        n_vars: Number of variables
+        seed: Random seed for reproducibility
+        
+    Returns:
+        List of literals representing the assignment (positive = True, negative = False)
+    """
+    if seed is not None:
+        random.seed(seed)
+    
+    return [i if random.random() < 0.5 else -i for i in range(1, n_vars + 1)]
+
+def random_walksat(clauses: List[List[int]], n_vars: int, 
+                   max_flips: int = 100000, 
+                   random_probability: float = 0.5,
+                   seed: Optional[int] = None) -> Tuple[Optional[List[int]], bool]:
+    """
+    Simple WalkSAT implementation to solve SAT problems.
+    
+    Args:
+        clauses: List of clauses, where each clause is a list of literals
+        n_vars: Number of variables
+        max_flips: Maximum number of variable flips
+        random_probability: Probability of making a random choice
+        seed: Random seed for reproducibility
+        
+    Returns:
+        Tuple of (assignment, solved) where assignment is the variable assignment
+        and solved indicates whether all clauses are satisfied
+    """
+    if seed is not None:
+        random.seed(seed)
+    
+    # Start with a random assignment
+    assignment = set([i if random.random() < 0.5 else -i for i in range(1, n_vars + 1)])
+    
+    for _ in range(max_flips):
+        # Find unsatisfied clauses
+        unsatisfied = []
+        
+        for i, clause in enumerate(clauses):
+            if not any(lit in assignment for lit in clause):
+                unsatisfied.append(i)
+        
+        # If all clauses are satisfied, we're done
+        if not unsatisfied:
+            return list(assignment), True
+        
+        # Choose a random unsatisfied clause
+        clause_idx = random.choice(unsatisfied)
+        clause = clauses[clause_idx]
+        
+        # Choose which variable to flip
+        if random.random() < random_probability:
+            # Random flip
+            var = abs(random.choice(clause))
+        else:
+            # Greedy flip - choose the variable that maximizes satisfied clauses
+            best_var = None
+            best_score = -1
+            
+            for lit in clause:
+                var = abs(lit)
+                
+                # Flip the variable
+                if var in assignment:
+                    assignment.remove(var)
+                    assignment.add(-var)
+                else:
+                    assignment.remove(-var)
+                    assignment.add(var)
+                
+                # Count satisfied clauses
+                score = sum(1 for c in clauses if any(l in assignment for l in c))
+                
+                # Restore the variable
+                if var in assignment:
+                    assignment.remove(var)
+                    assignment.add(-var)
+                else:
+                    assignment.remove(-var)
+                    assignment.add(var)
+                
+                if score > best_score:
+                    best_score = score
+                    best_var = var
+            
+            var = best_var
+        
+        # Flip the chosen variable
+        if var in assignment:
+            assignment.remove(var)
+            assignment.add(-var)
+        else:
+            assignment.remove(-var)
+            assignment.add(var)
+    
+    # If we get here, we've exceeded max_flips
+    return list(assignment), False
+
+if __name__ == "__main__":
+    # Example usage
+    problem = generate_sat_problem(20, 85)
+    print(f"Generated random 3-SAT problem with 20 variables and 85 clauses")
+    
+    # Try to solve it with WalkSAT
+    assignment, solved = random_walksat(problem, 20)
+    
+    if solved:
+        print(f"Found solution: {assignment}")
+    else:
+        print(f"Could not find solution after max flips")

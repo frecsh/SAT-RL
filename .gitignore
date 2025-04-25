@@ -19,6 +19,11 @@ var/
 *.egg-info/
 .installed.cfg
 *.egg
+*.zip
+*.tar.gz
+glucose-4.2.1/
+debug_satgan.py
+update_environment.sh
 
 # Experiment results
 *.pkl

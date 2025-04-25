@@ -16,6 +16,11 @@ print(f"Created '{IMAGES_DIR}' directory")
 EXAMPLES_DIR = 'examples'
 os.makedirs(EXAMPLES_DIR, exist_ok=True)
 
+# Create models directory for neural network models
+MODELS_DIR = 'models'
+os.makedirs(MODELS_DIR, exist_ok=True)
+print(f"Created '{MODELS_DIR}' directory for saving model checkpoints")
+
 # Define image file patterns to move
 image_patterns = [
     "*.png",
@@ -50,6 +55,15 @@ if 'images/' not in content:
         f.write(f"\n# Image files\n{IMAGES_DIR}/\n!{EXAMPLES_DIR}/*.png\n")
     print("Updated .gitignore to exclude images directory")
 
+# Also add models directory to gitignore but exclude .gitkeep
+if 'models/' not in content:
+    with open('.gitignore', 'a') as f:
+        f.write(f"\n# Model files\n{MODELS_DIR}/*.pth\n{MODELS_DIR}/*.h5\n")
+    # Create a .gitkeep file so the directory is tracked
+    with open(os.path.join(MODELS_DIR, '.gitkeep'), 'w') as f:
+        pass
+
 print("\nOrganization complete!")
 print(f"All image files are now in the '{IMAGES_DIR}' directory.")
 print("Remember to update your scripts to save new images to this directory.")
+print(f"Neural network models will be saved in the '{MODELS_DIR}' directory.")

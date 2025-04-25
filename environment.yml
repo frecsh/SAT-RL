@@ -1,0 +1,20 @@
+name: gan_sat_rl
+channels:
+  - conda-forge
+  - pytorch
+  - defaults
+dependencies:
+  - python=3.10
+  - pip
+  - numpy<2.0
+  - pytorch
+  - torchvision
+  - torchaudio
+  - matplotlib
+  - pandas
+  - scipy
+  - tqdm
+  - jupyter
+  - pip:
+    - gym
+    - pysat

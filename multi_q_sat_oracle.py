@@ -1,395 +1,327 @@
+#!/usr/bin/env python3
+"""
+Multi-agent Q-learning implementation for solving SAT problems.
+This version integrates a SAT solver oracle for guidance.
+"""
+
 import numpy as np
 import random
 import time
-from main import SATEnv
-from sat_oracle import SATOracle
+from typing import List, Tuple, Dict, Any, Optional
+from sat_problems import count_satisfied_clauses, is_satisfied, random_walksat
+from multi_q_sat import MultiQLearningSAT
 
-class OracleGuidedQLearningAgent:
+class MultiQLearningSATOracle(MultiQLearningSAT):
     """
-    Q-learning agent that receives guidance from a SAT solver oracle,
-    focusing on problematic clauses identified by the oracle.
+    Multi-agent Q-learning implementation with oracle guidance.
+    The oracle (a traditional SAT solver) provides guidance to help agents learn faster.
     """
-    def __init__(self, n_vars, learning_rate=0.1, discount_factor=0.95, exploration_rate=1.0, 
-                 min_exploration_rate=0.01, exploration_decay=0.995, oracle_weight=0.3):
-        self.n_vars = n_vars
-        self.learning_rate = learning_rate
-        self.discount_factor = discount_factor
-        self.exploration_rate = exploration_rate
-        self.min_exploration_rate = min_exploration_rate
-        self.exploration_decay = exploration_decay
-        self.q_table = {}
-        self.oracle_weight = oracle_weight  # Weight for oracle feedback in reward calculation
-        self.trajectory = []  # Store recent state-action-reward
-        self.oracle_suggestions = {}  # Store recent oracle suggestions
-        self.critiqued_clauses = set()  # Track clauses that have been critiqued
+    
+    def __init__(self, n_vars: int, clauses: List[List[int]], 
+                 n_agents: int = 5, learning_rate: float = 0.1, 
+                 discount_factor: float = 0.95, epsilon: float = 0.1,
+                 epsilon_decay: float = 0.995, min_epsilon: float = 0.01,
+                 oracle_weight: float = 0.35, oracle_interval: int = 10):
+        """
+        Initialize the oracle-guided multi-agent Q-learning SAT solver.
         
-    def get_q_value(self, state, action):
-        state_tuple = tuple(state)
-        action_tuple = tuple(action)
-        return self.q_table.get((state_tuple, action_tuple), 0.0)
-    
-    def select_action(self, state):
-        # Epsilon-greedy action selection
-        if random.random() < self.exploration_rate:
-            # Random exploration, but with oracle bias if available
-            if self.oracle_suggestions and random.random() < self.oracle_weight:
-                # Create an action that follows oracle suggestions for some variables
-                action = np.random.randint(0, 2, self.n_vars)
-                for var, value in self.oracle_suggestions.items():
-                    if var <= self.n_vars:
-                        action[var-1] = 1 if value else 0
-                return action
-            else:
-                # Pure random action
-                return np.random.randint(0, 2, self.n_vars)
-        else:
-            # Exploit: choose best action based on Q-values
-            best_action = None
-            best_value = float('-inf')
-            
-            for _ in range(10):  # Sample 10 random actions
-                action = np.random.randint(0, 2, self.n_vars)
-                # Bias toward oracle suggestions
-                if self.oracle_suggestions and random.random() < self.oracle_weight:
-                    for var, value in self.oracle_suggestions.items():
-                        if var <= self.n_vars:
-                            action[var-1] = 1 if value else 0
-                
-                q_value = self.get_q_value(state, action)
-                if q_value > best_value:
-                    best_value = q_value
-                    best_action = action.copy()
-            
-            return best_action
-    
-    def update(self, state, action, reward, next_state, oracle_critique=None):
-        # Store in trajectory for later oracle critique
-        self.trajectory.append((state, action, reward))
+        Args:
+            n_vars: Number of variables in the SAT problem
+            clauses: List of clauses, where each clause is a list of literals
+            n_agents: Number of agents (default: 5)
+            learning_rate: Learning rate for Q-learning (default: 0.1)
+            discount_factor: Discount factor for future rewards (default: 0.95)
+            epsilon: Initial exploration rate (default: 0.1)
+            epsilon_decay: Rate at which epsilon decays (default: 0.995)
+            min_epsilon: Minimum exploration rate (default: 0.01)
+            oracle_weight: Weight of oracle guidance (default: 0.35)
+            oracle_interval: Interval between oracle consultations (default: 10)
+        """
+        super().__init__(n_vars, clauses, n_agents, learning_rate, 
+                        discount_factor, epsilon, epsilon_decay, min_epsilon)
+        self.oracle_weight = oracle_weight
+        self.oracle_interval = oracle_interval
         
-        # Apply oracle critique if available
-        adjusted_reward = reward
-        if oracle_critique:
-            # Extract oracle suggestions
-            self.oracle_suggestions = oracle_critique.get("suggestions", {})
-            
-            # Track critiqued clauses
-            unsatisfied = oracle_critique.get("unsatisfied_clauses", [])
-            self.critiqued_clauses.update(unsatisfied)
-            
-            # Adjust reward based on oracle critique - penalize for difficult clauses
-            difficulty_ranking = oracle_critique.get("difficulty_ranking", [])
-            if difficulty_ranking:
-                # Penalize based on clause difficulty
-                difficulty_penalty = sum(score for _, score in difficulty_ranking[:3]) / 3
-                adjusted_reward = reward * (1 - self.oracle_weight) + \
-                                 (1 - difficulty_penalty) * self.oracle_weight
+        # Track oracle suggestions
+        self.oracle_suggestions = []
+        self.oracle_consultations = 0
         
-        # Standard Q-learning update with adjusted reward
-        state_tuple = tuple(state)
-        action_tuple = tuple(action)
+        # Track clause difficulty to guide oracle suggestions
+        self.clause_difficulty = np.ones(len(clauses)) / len(clauses)
+        self.clause_satisfaction_count = np.zeros(len(clauses))
+        self.clause_check_count = 0
+    
+    def _update_clause_difficulty(self, state: List[int]) -> None:
+        """
+        Update the difficulty estimates for each clause based on the current state.
+        Clauses that are frequently unsatisfied are considered more difficult.
         
-        current_q = self.get_q_value(state, action)
+        Args:
+            state: Current variable assignment
+        """
+        # Convert assignment list to a set for O(1) lookups
+        true_lits = set(state)
         
-        # Find maximum Q-value for next state
-        max_next_q = 0.0
-        for _ in range(10):  # Sample 10 random actions for next state
-            next_action = np.random.randint(0, 2, self.n_vars)
-            next_q = self.get_q_value(next_state, next_action)
-            max_next_q = max(max_next_q, next_q)
-        
-        # Q-learning update rule with adjusted reward
-        new_q = current_q + self.learning_rate * (adjusted_reward + self.discount_factor * max_next_q - current_q)
-        
-        # Update Q-table
-        self.q_table[(state_tuple, action_tuple)] = new_q
-        
-        # Decay exploration rate
-        self.exploration_rate = max(self.min_exploration_rate, self.exploration_rate * self.exploration_decay)
-        
-    def get_trajectory(self):
-        """Return the recent trajectory for oracle critique"""
-        return self.trajectory.copy()
-    
-    def clear_trajectory(self):
-        """Clear the stored trajectory after oracle critique"""
-        self.trajectory = []
-    
-    def q_value_variance(self):
-        """Calculate variance in Q-values as a measure of convergence"""
-        if not self.q_table:
-            return 0
-        values = list(self.q_table.values())
-        return np.var(values) if values else 0
-
-def main(problem=None, oracle_weight=0.3):
-    """Run oracle-guided Q-learning on a SAT problem"""
-    if problem is None:
-        # Default harder SAT formula from previous implementation
-        harder_formula = [
-            [1, -3, 5],      # x1 OR NOT x3 OR x5
-            [-1, 2, 4],      # NOT x1 OR x2 OR x4
-            [2, -4, -5],     # x2 OR NOT x4 OR NOT x5
-            [-2, 3, 5],      # NOT x2 OR x3 OR x5
-            [1, -2, -3],     # x1 OR NOT x2 OR NOT x3
-            [-1, 3, -5]      # NOT x1 OR x3 OR NOT x5
-        ]
-        problem = {
-            "name": "default_harder",
-            "clauses": harder_formula,
-            "num_vars": 5
-        }
-    
-    n_vars = problem["num_vars"]
-    n_agents = 3
-    total_episodes = 1000
-    oracle_critique_frequency = 10  # How often to get oracle feedback
-    
-    # Create agents, environment, and oracle
-    agents = [OracleGuidedQLearningAgent(n_vars=n_vars, oracle_weight=oracle_weight) for _ in range(n_agents)]
-    env = SATEnv(problem=problem)
-    oracle = SATOracle(problem)
-    
-    # Add metrics tracking
-    metrics = {
-        "episode_rewards": [],      # Track reward per episode
-        "best_reward_progress": [], # Track how best reward improves
-        "solution_found": False,    # Whether a solution was found
-        "solution_episode": None,   # When solution was found
-        "q_table_sizes": [],        # Track Q-table growth
-        "exploration_rates": [],    # Track exploration decay
-        "q_value_variance": [],     # Track Q-value variance
-        "oracle_critiques": [],     # Track oracle critiques
-        "difficult_clauses": [],    # Track difficult clauses over time
-        "early_stopped": False      # Whether training was stopped early
-    }
-    
-    start_time = time.time()
-    
-    # Training loop
-    best_reward = 0
-    best_solution = None
-    
-    # Add plateau detection
-    plateau_counter = 0
-    last_best_reward = 0
-    
-    print(f"Training oracle-guided Q-learning agents on {problem['name']} (oracle weight: {oracle_weight})...")
-    
-    for episode in range(total_episodes):
-        episode_rewards = []
-        episode_critiques = []
-        
-        for agent_idx, agent in enumerate(agents):
-            state = env.reset()
-            total_reward = 0
-            done = False
-            step_count = 0
-            max_steps = 10  # Limit steps per episode
-            
-            # Clear trajectory for this episode
-            agent.clear_trajectory()
-            
-            while not done and step_count < max_steps:
-                action = agent.select_action(state)
-                next_state, reward, done, _ = env.step(action)
-                
-                # Only request oracle critique periodically to reduce overhead
-                oracle_critique = None
-                if episode % oracle_critique_frequency == 0 and step_count == max_steps - 1:
-                    oracle_critique = oracle.critique([(state, action, reward)])
-                    episode_critiques.append(oracle_critique)
-                
-                # Update agent with oracle feedback
-                agent.update(state, action, reward, next_state, oracle_critique)
-                
-                state = next_state
-                total_reward += reward
-                step_count += 1
-                
-                # Keep track of best solution
-                if reward > best_reward:
-                    best_reward = reward
-                    best_solution = action.copy()
-                
-                # Early stopping if we found a solution
-                if done and reward == 1.0:
+        # Update satisfaction counts for each clause
+        for i, clause in enumerate(self.clauses):
+            # Check if this clause is satisfied
+            satisfied = False
+            for lit in clause:
+                if lit in true_lits:
+                    satisfied = True
                     break
             
-            episode_rewards.append(total_reward)
+            # Update counts
+            if satisfied:
+                self.clause_satisfaction_count[i] += 1
         
-        # Update metrics after each episode
-        metrics["episode_rewards"].append(max(episode_rewards))
-        metrics["best_reward_progress"].append(best_reward)
+        # Increment check count
+        self.clause_check_count += 1
         
-        # Periodically update clause difficulty metrics
-        if episode % oracle_critique_frequency == 0:
-            metrics["difficult_clauses"].append({
-                "episode": episode,
-                "difficulties": oracle.clause_difficulty.tolist()
-            })
-            metrics["oracle_critiques"].append({
-                "episode": episode,
-                "critiques": episode_critiques
-            })
+        # Update difficulty scores
+        if self.clause_check_count >= 10:  # Only update periodically
+            # Calculate satisfaction ratio for each clause
+            satisfaction_ratio = self.clause_satisfaction_count / self.clause_check_count
             
-        if episode % 100 == 0:
-            # Track Q-table sizes and exploration rates
-            avg_q_size = sum(len(agent.q_table) for agent in agents) / len(agents)
-            avg_explore = sum(agent.exploration_rate for agent in agents) / len(agents)
+            # Invert to get difficulty (higher = more difficult)
+            difficulty = 1.0 - satisfaction_ratio
             
-            metrics["q_table_sizes"].append(avg_q_size)
-            metrics["exploration_rates"].append(avg_explore)
+            # Normalize
+            total = np.sum(difficulty)
+            if total > 0:
+                self.clause_difficulty = difficulty / total
+            
+            # Reset counters for next period
+            self.clause_satisfaction_count = np.zeros(len(self.clauses))
+            self.clause_check_count = 0
+    
+    def _consult_oracle(self, current_state: List[int]) -> List[int]:
+        """
+        Consult the oracle (a traditional SAT solver) for guidance.
         
-        if episode % 10 == 0:
-            avg_variance = sum(agent.q_value_variance() for agent in agents) / len(agents)
-            metrics["q_value_variance"].append(avg_variance)
+        Args:
+            current_state: Current variable assignment
+            
+        Returns:
+            Suggested variable assignment from oracle
+        """
+        # Use WalkSAT as our oracle, starting from the current state
+        # We limit the number of flips to make it quick
+        solution, solved = random_walksat(
+            self.clauses, 
+            self.n_vars, 
+            max_flips=1000,
+            random_probability=0.3
+        )
         
-        # Early stopping if performance plateaus
-        if best_reward == last_best_reward:
-            plateau_counter += 1
-        else:
-            plateau_counter = 0
-            last_best_reward = best_reward
+        # Record the consultation
+        self.oracle_consultations += 1
         
-        if plateau_counter >= 5 and episode > 100:
-            print(f"Early stopping at episode {episode}: No improvement for 5 consecutive checks")
-            metrics["early_stopped"] = True
-            metrics["solution_found"] = best_reward == 1.0
-            metrics["solution_episode"] = episode + 1
-            metrics["runtime"] = time.time() - start_time
-            return metrics
+        return solution
+    
+    def _get_oracle_suggestions(self, current_state: List[int]) -> Dict[int, int]:
+        """
+        Get variable assignment suggestions from the oracle.
         
-        # Print progress every 100 episodes
-        if (episode + 1) % 100 == 0:
-            print(f"Episode {episode + 1}/{total_episodes}, Best reward so far: {best_reward}")
-            if episode_critiques:
-                difficult_clauses = episode_critiques[0].get("difficulty_ranking", [])
-                print(f"Most difficult clauses: {difficult_clauses}")
+        Args:
+            current_state: Current variable assignment
+            
+        Returns:
+            Dictionary mapping variables to suggested values
+        """
+        # Consult the oracle
+        oracle_assignment = self._consult_oracle(current_state)
+        
+        # Convert to dictionary for easy lookup
+        suggestions = {}
+        for lit in oracle_assignment:
+            var = abs(lit)
+            value = 1 if lit > 0 else -1
+            suggestions[var] = value
+        
+        return suggestions
+    
+    def _select_action(self, agent_idx: int, state: List[int]) -> int:
+        """
+        Select an action for an agent using epsilon-greedy policy with oracle guidance.
+        
+        Args:
+            agent_idx: Index of the agent
+            state: Current state (variable assignment)
+            
+        Returns:
+            Variable to flip
+        """
+        available_actions = self._get_available_actions(agent_idx)
+        
+        if random.random() < self.epsilon:
+            # Exploration: choose a random action
+            return random.choice(available_actions)
+        
+        # Check if we have oracle suggestions
+        if self.oracle_suggestions:
+            # Get Q-values for all available actions
+            q_values = {}
+            for action in available_actions:
+                q_values[action] = self._get_q_value(agent_idx, state, action)
+            
+            # Get oracle suggestion for this agent's variables
+            oracle_action = None
+            for var in available_actions:
+                # Check if the oracle has a suggestion for this variable
+                if var in self.oracle_suggestions:
+                    # Get the current value of the variable in the state
+                    current_val = None
+                    for lit in state:
+                        if abs(lit) == var:
+                            current_val = 1 if lit > 0 else -1
+                            break
+                    
+                    # Only consider flipping if the oracle suggests a different value
+                    if current_val and self.oracle_suggestions[var] != current_val:
+                        oracle_action = var
+                        break
+            
+            if oracle_action:
+                # Blend Q-values with oracle suggestion
+                best_q = max(q_values.values()) if q_values else 0.0
+                for action in available_actions:
+                    if action == oracle_action:
+                        # Boost the Q-value of the oracle's suggestion
+                        q_values[action] = (1.0 - self.oracle_weight) * q_values.get(action, 0.0) + self.oracle_weight * best_q * 1.5
+            
+                # Find the best action(s) after blending
+                max_q = max(q_values.values())
+                best_actions = [a for a, q in q_values.items() if q == max_q]
                 
-            if best_reward == 1.0:
-                print("Solution found!")
-                assignment = {i + 1: bool(bit) for i, bit in enumerate(best_solution)}
-                print(f"Solution: {assignment}")
+                # Choose randomly among the best actions
+                return random.choice(best_actions)
+        
+        # Fall back to regular Q-learning selection if no oracle guidance
+        return super()._select_action(agent_idx, state)
+    
+    def solve(self, max_episodes: int = 1000, early_stopping: bool = True, 
+              timeout: Optional[int] = None) -> Tuple[Optional[List[int]], Dict[str, Any]]:
+        """
+        Solve the SAT problem using multi-agent Q-learning with oracle guidance.
+        
+        Args:
+            max_episodes: Maximum number of episodes
+            early_stopping: Whether to stop early when a solution is found
+            timeout: Timeout in seconds
+            
+        Returns:
+            Tuple of (solution, stats) where solution is the variable assignment
+            and stats contains statistics about the solving process
+        """
+        start_time = time.time()
+        episodes_completed = 0
+        solved = False
+        timed_out = False
+        
+        # Initialize with a random assignment
+        current_state = [random.choice([var, -var]) for var in range(1, self.n_vars + 1)]
+        
+        for episode in range(max_episodes):
+            episodes_completed = episode + 1
+            
+            # Check timeout
+            if timeout and (time.time() - start_time) > timeout:
+                timed_out = True
+                break
+            
+            # Consult oracle periodically
+            if episode % self.oracle_interval == 0:
+                self.oracle_suggestions = self._get_oracle_suggestions(current_state)
+            
+            # Each episode starts with a random state with probability epsilon,
+            # otherwise continues from the current state
+            if random.random() < self.epsilon:
+                current_state = [random.choice([var, -var]) for var in range(1, self.n_vars + 1)]
+            
+            # Update clause difficulty
+            self._update_clause_difficulty(current_state)
+            
+            # Each agent takes an action in turn
+            for agent_idx in range(self.n_agents):
+                # Select action (with potential oracle guidance)
+                action = self._select_action(agent_idx, current_state)
                 
-                metrics["solution_found"] = True
-                metrics["solution_episode"] = episode + 1
-                metrics["runtime"] = time.time() - start_time
-                return metrics  # Return early with metrics
-    
-    # If we get here, no solution was found
-    metrics["runtime"] = time.time() - start_time
-    return metrics
-
-def visualize_oracle_guidance(metrics_file=None):
-    """Visualize how oracle guidance affected learning"""
-    import matplotlib.pyplot as plt
-    import pickle
-    
-    # Load metrics if provided, otherwise use the last run
-    metrics = None
-    if metrics_file:
-        with open(metrics_file, 'rb') as f:
-            metrics = pickle.load(f)
-    else:
-        # Find the most recent metrics file
-        import glob
-        import os
-        files = glob.glob("oracle_metrics_*.pkl")
-        if files:
-            latest_file = max(files, key=os.path.getctime)
-            with open(latest_file, 'rb') as f:
-                metrics = pickle.load(f)
-    
-    if not metrics:
-        print("No metrics found to visualize")
-        return
-    
-    # Create visualizations
-    plt.figure(figsize=(12, 8))
-    
-    # Plot clause difficulty over time
-    if "difficult_clauses" in metrics:
-        plt.subplot(2, 2, 1)
-        clause_data = metrics["difficult_clauses"]
-        episodes = [d["episode"] for d in clause_data]
-        
-        # Get number of clauses from first data point
-        n_clauses = len(clause_data[0]["difficulties"])
-        
-        # Plot each clause's difficulty over time
-        for clause_idx in range(n_clauses):
-            difficulties = [d["difficulties"][clause_idx] for d in clause_data]
-            plt.plot(episodes, difficulties, marker='o', label=f"Clause {clause_idx}")
+                # Take action
+                next_state = self._take_action(current_state, action)
+                
+                # Calculate reward
+                reward = self._get_reward(current_state, next_state)
+                
+                # Update Q-value
+                self._update_q_value(agent_idx, current_state, action, reward, next_state)
+                
+                # Track best solution
+                self._track_best_solution(next_state)
+                
+                # Update current state
+                current_state = next_state
+                
+                # Check if problem is solved
+                if is_satisfied(self.clauses, current_state):
+                    solved = True
+                    if early_stopping:
+                        break
             
-        plt.xlabel("Episode")
-        plt.ylabel("Difficulty Score")
-        plt.title("Clause Difficulty Over Time")
-        plt.legend()
-    
-    # Plot learning curve
-    plt.subplot(2, 2, 2)
-    plt.plot(metrics["best_reward_progress"])
-    plt.xlabel("Episode")
-    plt.ylabel("Best Reward")
-    plt.title("Learning Curve with Oracle Guidance")
-    
-    # Create heatmap of visited clauses
-    if "oracle_critiques" in metrics and metrics["oracle_critiques"]:
-        plt.subplot(2, 2, 3)
-        critiques = metrics["oracle_critiques"]
+            # Decay epsilon
+            self.epsilon = max(self.min_epsilon, self.epsilon * self.epsilon_decay)
+            
+            # Early stopping if solved
+            if solved and early_stopping:
+                break
+            
+            # Clear oracle suggestions after a few steps to avoid overreliance
+            if episode % self.oracle_interval == self.oracle_interval - 1:
+                self.oracle_suggestions = {}
         
-        # Count how often each clause is satisfied/unsatisfied
-        clause_satisfaction = {}
-        for critique_data in critiques:
-            episode = critique_data["episode"]
-            for critique in critique_data["critiques"]:
-                if "satisfied_clauses" in critique:
-                    for clause_idx in critique["satisfied_clauses"]:
-                        key = (episode, clause_idx)
-                        clause_satisfaction[key] = clause_satisfaction.get(key, 0) + 1
+        # Prepare solution
+        solution = self.best_assignment if self.best_assignment else current_state
         
-        # Create heatmap data
-        if clause_satisfaction:
-            # Find max episode and clause index
-            max_episode = max(episode for episode, _ in clause_satisfaction.keys())
-            max_clause = max(clause_idx for _, clause_idx in clause_satisfaction.keys())
-            
-            # Create bins for heatmap (every 50 episodes)
-            episode_bins = range(0, max_episode+50, 50)
-            heatmap_data = np.zeros((len(episode_bins)-1, max_clause+1))
-            
-            for (episode, clause_idx), count in clause_satisfaction.items():
-                bin_idx = episode // 50
-                if bin_idx < len(episode_bins)-1:
-                    heatmap_data[bin_idx, clause_idx] = count
-            
-            # Plot heatmap
-            plt.imshow(heatmap_data, aspect='auto', cmap='viridis')
-            plt.colorbar(label='Satisfaction Count')
-            plt.xlabel("Clause Index")
-            plt.ylabel("Episode Bin")
-            plt.title("Clause Satisfaction Over Time")
-            plt.yticks(range(len(episode_bins)-1), [f"{episode_bins[i]}-{episode_bins[i+1]}" for i in range(len(episode_bins)-1)])
-    
-    plt.tight_layout()
-    plt.savefig("oracle_guidance.png")
-    print("Saved visualization to oracle_guidance.png")
-    plt.close()
+        # Calculate statistics
+        end_time = time.time()
+        solve_time = end_time - start_time
+        
+        stats = {
+            'solved': solved,
+            'episodes': episodes_completed,
+            'time': solve_time,
+            'best_satisfied': self.best_satisfied,
+            'best_satisfaction_ratio': self.best_satisfaction_ratio,
+            'final_epsilon': self.epsilon,
+            'timed_out': timed_out,
+            'oracle_consultations': self.oracle_consultations,
+            'oracle_weight': self.oracle_weight
+        }
+        
+        return solution, stats
 
 if __name__ == "__main__":
-    from sat_problems import HARD_PROBLEM
+    # Example usage
+    from sat_problems import generate_sat_problem
     
-    # Run with more oracle weights to find the optimal threshold
-    oracle_weights = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+    # Generate a small SAT problem
+    n_vars = 20
+    n_clauses = 85
+    clauses = generate_sat_problem(n_vars, n_clauses)
     
-    for weight in oracle_weights:
-        print(f"\nRunning with oracle weight: {weight}")
-        metrics = main(HARD_PROBLEM, oracle_weight=weight)
-        
-        # Save metrics
-        import pickle
-        with open(f"oracle_metrics_{HARD_PROBLEM['name']}_{weight}.pkl", "wb") as f:
-            pickle.dump(metrics, f)
+    # Create solver with oracle guidance
+    solver = MultiQLearningSATOracle(n_vars, clauses, oracle_weight=0.35)
     
-    # Visualize results
-    visualize_oracle_guidance()
+    # Solve
+    print(f"Solving {n_vars}-variable, {n_clauses}-clause SAT problem with oracle guidance...")
+    solution, stats = solver.solve(max_episodes=1000, early_stopping=True)
+    
+    # Print results
+    print(f"Solved: {stats['solved']}")
+    print(f"Episodes: {stats['episodes']}")
+    print(f"Time: {stats['time']:.2f} seconds")
+    print(f"Satisfaction: {stats['best_satisfied']}/{len(clauses)} clauses ({stats['best_satisfaction_ratio']:.2%})")
+    print(f"Oracle consultations: {stats['oracle_consultations']}")
+    
+    if stats['solved']:
+        print(f"Solution: {solution}")
