@@ -124,15 +124,10 @@ Provides partial results with quality bounds at any point during computation:
 ### Project Structure
 
 
- ![Architecture of the SAT+RL Project](sat_rl_architecture.png)
+![Architecture of the SAT+RL Project](sat_rl_architecture.png)
 
 
-Architecture 
 ## Getting Started
-
-//insert
-
-(sat_rl_architecture.png) picture of the
 
 
 ### Prerequisites
