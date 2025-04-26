@@ -326,6 +326,57 @@ class BenchmarkAnalyzer:
             plt.tight_layout()
             plt.savefig(os.path.join(self.output_dir, f'phase_transition_time.{self.format}'))
             plt.close()
+            
+            # Additional analysis: Time complexity growth rate near phase transition
+            # This helps visualize how solver difficulty increases approaching the phase transition
+            plt.figure(figsize=(12, 8))
+            
+            # Define regions around phase transition
+            pre_transition = (3.5, 4.0)  # Before transition
+            transition = (4.0, 4.5)      # Transition zone
+            post_transition = (4.5, 5.0) # After transition
+            
+            for solver in avg_times['solver'].unique():
+                solver_data = avg_times[avg_times['solver'] == solver]
+                
+                # Compute growth rates in different regions
+                growth_rates = {}
+                for region_name, (lower, upper) in zip(
+                    ['pre-transition', 'transition', 'post-transition'],
+                    [pre_transition, transition, post_transition]
+                ):
+                    region_data = solver_data[
+                        (solver_data['ratio'] >= lower) & 
+                        (solver_data['ratio'] <= upper)
+                    ]
+                    
+                    if len(region_data) > 1:
+                        # Compute slope in log space
+                        x = region_data['ratio']
+                        y = np.log(region_data['time'])
+                        if len(x) > 1:  # Need at least 2 points for regression
+                            slope, _, _, _, _ = stats.linregress(x, y)
+                            growth_rates[region_name] = slope
+                
+                # Plot growth rate visualization if we have enough data
+                if growth_rates:
+                    bar_positions = np.arange(len(growth_rates))
+                    plt.bar(
+                        bar_positions + 0.1 * list(avg_times['solver'].unique()).index(solver),
+                        list(growth_rates.values()),
+                        width=0.1,
+                        label=solver
+                    )
+            
+            if growth_rates:  # Only if we have data to show
+                plt.title("Time Complexity Growth Rate Near Phase Transition")
+                plt.xlabel("Region")
+                plt.ylabel("Growth Rate (higher = more difficult)")
+                plt.xticks(np.arange(3), ['Pre-transition\n(3.5-4.0)', 'Transition\n(4.0-4.5)', 'Post-transition\n(4.5-5.0)'])
+                plt.legend()
+                plt.tight_layout()
+                plt.savefig(os.path.join(self.output_dir, f'phase_transition_growth_rate.{self.format}'))
+                plt.close()
         
         # Find the precise phase transition point based on results
         # (where success rate drops most dramatically)
@@ -348,12 +399,39 @@ class BenchmarkAnalyzer:
                         'phase_transition_ratio': round(pt_ratio, 2),
                         'success_rate_drop': round(pt_drop, 3)
                     }
-        
-        # Save phase transition analysis
-        with open(os.path.join(self.output_dir, f'phase_transition_analysis.json'), 'w') as f:
-            json.dump(pt_analysis, f, indent=2)
-        
-        print(f"Phase transition analysis saved to {self.output_dir}/phase_transition_analysis.json")
+                    
+        # Analyze specific behaviors near the phase transition
+        if not solved_phase.empty:
+            # Extract learning metrics if available in the data
+            learning_metrics = [col for col in self.phase_df.columns 
+                               if col in ['q_table_size', 'exploration_rate', 'q_value_variance', 
+                                         'oracle_consultations', 'gan_generations_used']]
+            
+            if learning_metrics:
+                plt.figure(figsize=(15, 10))
+                
+                # Create subplots for each learning metric
+                for i, metric in enumerate(learning_metrics):
+                    if metric in self.phase_df.columns:
+                        plt.subplot(2, (len(learning_metrics)+1)//2, i+1)
+                        
+                        # Group by ratio and solver, then calculate mean
+                        metric_data = self.phase_df.groupby(['ratio', 'solver'])[metric].mean().reset_index()
+                        
+                        # Plot the metric
+                        sns.lineplot(x='ratio', y=metric, hue='solver', marker='o', data=metric_data)
+                        
+                        plt.title(f"{metric.replace('_', ' ').title()} vs. Ratio")
+                        plt.xlabel("Clause-to-Variable Ratio")
+                        plt.axvline(x=4.2, color='red', linestyle='--', alpha=0.5)
+                        
+                        # Use log scale for certain metrics that might have large variations
+                        if metric in ['q_table_size', 'oracle_consultations', 'gan_generations_used']:
+                            plt.yscale('log')
+                
+                plt.tight_layout()
+                plt.savefig(os.path.join(self.output_dir, f'phase_transition_learning_metrics.{self.format}'))
+                plt.close()
 
     def run_statistical_tests(self):
         """Run statistical tests to compare solver performance"""
