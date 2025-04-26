@@ -83,7 +83,6 @@ The curriculum learning approach tackles phase transition problems by gradually 
 - **Knowledge Transfer**: Transfers neural network weights between difficulty levels
 - **Adaptive Step Sizing**: Automatically adjusts difficulty progression based on success rates
 - **Multi-Agent Switching**: Uses different solver strategies at different stages of the curriculum
-- **Performance**: Achieves 65% success rate on phase transition problems (compared to ~0% with direct approaches)
 - **Enhanced Exploration**: Implements dynamic exploration parameters based on problem difficulty
 - **Restart Mechanisms**: Periodically reinitializes with new starting points to escape local optima
 - **Solution Diversity**: Maintains a pool of diverse promising solutions
