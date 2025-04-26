@@ -121,8 +121,19 @@ Provides partial results with quality bounds at any point during computation:
 ├── analyze_benchmarks.py        # Analysis of solver performance and phase transition
 └── generate_architecture_diagram.py  # Creates visual representation of project components
 ```
+### Project Structure
 
+
+ ![Architecture of the SAT+RL Project](sat_rl_architecture.png)
+
+
+Architecture 
 ## Getting Started
+
+//insert
+
+(sat_rl_architecture.png) picture of the
+
 
 ### Prerequisites
 
