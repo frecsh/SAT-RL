@@ -6,15 +6,18 @@ Tackles the phase transition problem by gradually increasing problem difficulty.
 import numpy as np
 import random
 import time
+import os
+import json
 import matplotlib.pyplot as plt
 from deep_q_sat_agent import DeepQLearningAgent
 from improved_sat_gan import ImprovedSATGAN
 from anytime_sat_solver import AnytimeEnsembleSolver
 import tensorflow as tf
+from sat_rl_logger import SATRLLogger, wrap_agent_step
 
 
 class CurriculumSATLearner:
-    def __init__(self, n_vars, initial_ratio=3.0, target_ratio=4.2, step_size=0.2):
+    def __init__(self, n_vars, initial_ratio=3.0, target_ratio=4.2, step_size=0.2, enable_logging=True, logs_dir="sat_rl_logs/curriculum"):
         """
         Initialize a Curriculum Learning approach for SAT problems.
         
@@ -23,6 +26,8 @@ class CurriculumSATLearner:
             initial_ratio: Starting clause-to-variable ratio (easier)
             target_ratio: Target clause-to-variable ratio (harder, typically 4.2)
             step_size: Initial step size for curriculum progression
+            enable_logging: Whether to enable logging
+            logs_dir: Directory to store logs
         """
         self.n_vars = n_vars
         self.initial_ratio = initial_ratio
@@ -42,6 +47,25 @@ class CurriculumSATLearner:
         # Best solution found so far
         self.best_solution = None
         self.best_satisfied = 0
+
+        # Set up logging
+        self.enable_logging = enable_logging
+        self.logger = None
+        if enable_logging:
+            self.logs_dir = logs_dir
+            os.makedirs(self.logs_dir, exist_ok=True)
+            
+            # Create a specialized logger for curriculum learning
+            self.logger = SATRLLogger(
+                max_entries=100000,  # More entries for curriculum learning
+                log_to_file=True,
+                logs_dir=self.logs_dir
+            )
+            
+            # Also create a curriculum metadata log file
+            self.curriculum_log_path = os.path.join(self.logs_dir, "curriculum_progression.csv")
+            with open(self.curriculum_log_path, 'w') as f:
+                f.write("stage,ratio,episodes,success_rate,avg_reward,training_time,restart_count\n")
     
     def generate_sat_problem(self, n_vars, ratio, unique_clauses=True):
         """Generate a random 3-SAT problem with given clause-to-variable ratio"""
@@ -515,4 +539,40 @@ class CurriculumSATLearner:
         # Visualize final learning curve
         self.visualize_learning_curve()
         
+        # Final log export
+        if self.enable_logging:
+            # Export final traces
+            final_log_path = self.logger.export_traces_to_csv("curriculum_final_traces.csv")
+            print(f"Final logs exported to {final_log_path}")
+            
+            # Print statistics
+            stats = self.logger.get_statistics()
+            print("\nTraining Statistics:")
+            for key, value in stats.items():
+                print(f"  {key}: {value}")
+            
+            # Save curriculum summary
+            self._save_curriculum_summary()
+        
         return self.best_solution, self.best_satisfied
+    
+    def _log_curriculum_stage(self, stage, rewards, success_rate, training_time):
+        """Log information about the curriculum stage"""
+        avg_reward = sum(rewards) / len(rewards) if rewards else 0
+        
+        # Append to CSV log file
+        with open(self.curriculum_log_path, 'a') as f:
+            f.write(f"{stage},{self.initial_ratio:.2f},{len(rewards)},{success_rate:.4f},"
+                   f"{avg_reward:.4f},{training_time:.2f}\n")
+    
+    def _save_curriculum_summary(self):
+        """Save a summary of the curriculum learning process"""
+        summary = {
+            "final_ratio": self.target_ratio,
+            "stages_completed": len(self.progress_history),
+        }
+        
+        # Save as JSON
+        summary_path = os.path.join(self.logs_dir, "curriculum_summary.json")
+        with open(summary_path, 'w') as f:
+            json.dump(summary, f, indent=2)

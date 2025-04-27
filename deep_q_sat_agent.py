@@ -4,337 +4,222 @@ This agent uses neural networks for function approximation instead of Q-tables.
 """
 
 import numpy as np
-import tensorflow as tf
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense, Input, Dropout
-from tensorflow.keras.optimizers import Adam
-from tensorflow.keras.models import Model
-import random
+import torch
+import torch.nn as nn
+import torch.optim as optim
 from collections import deque
+import random
 import time
+import os
+from sat_rl_logger import SATRLLogger, wrap_agent_step
 
 
-class DeepQLearningAgent:
-    def __init__(self, n_vars, clauses, epsilon=1.0, epsilon_decay=0.995, 
-                 epsilon_min=0.1, learning_rate=0.001, gamma=0.95, restart_callback=None):
+class DeepQSATAgent:
+    def __init__(self, state_size, action_size, hidden_size=128, learning_rate=0.001,
+                 gamma=0.99, epsilon=1.0, epsilon_min=0.01, epsilon_decay=0.995,
+                 memory_size=2000, batch_size=32, enable_logging=True, logs_dir='sat_rl_logs/dqn'):
         """
         Initialize a Deep Q-Learning agent for SAT problems.
         
         Args:
-            n_vars: Number of variables in the SAT problem
-            clauses: List of clauses in CNF form
-            epsilon: Initial exploration rate
-            epsilon_decay: Decay rate for exploration
-            epsilon_min: Minimum exploration rate
+            state_size: Size of the state space
+            action_size: Size of the action space
+            hidden_size: Number of hidden units in the neural network
             learning_rate: Learning rate for neural network
             gamma: Discount factor for future rewards
-            restart_callback: Function to call to decide whether to restart (episode, best_satisfied) -> bool
+            epsilon: Initial exploration rate
+            epsilon_min: Minimum exploration rate
+            epsilon_decay: Decay rate for exploration
+            memory_size: Maximum size of the replay memory
+            batch_size: Batch size for training
+            enable_logging: Whether to enable logging
+            logs_dir: Directory to save logs
         """
-        self.n_vars = n_vars
-        self.clauses = clauses
-        self.epsilon = epsilon
-        self.epsilon_decay = epsilon_decay
-        self.epsilon_min = epsilon_min
+        self.state_size = state_size
+        self.action_size = action_size
+        self.hidden_size = hidden_size
         self.learning_rate = learning_rate
         self.gamma = gamma
-        self.batch_size = 32
-        self.restart_callback = restart_callback
-        
-        # Double the action space to handle setting vars to 0 or 1 explicitly
-        self.action_size = 2 * n_vars  # For each var, can set to 0 or 1
-        
-        # Memory for experience replay
-        self.memory = deque(maxlen=2000)
+        self.epsilon = epsilon
+        self.epsilon_min = epsilon_min
+        self.epsilon_decay = epsilon_decay
+        self.memory = deque(maxlen=memory_size)
+        self.batch_size = batch_size
         
         # Initialize model
         self.model = self._build_model()
+        self.target_model = self._build_model()
+        self.update_target_model()
+        self.optimizer = optim.Adam(self.model.parameters(), lr=self.learning_rate)
         
-        # Track the best solution found
-        self.best_assignment = None
-        self.best_satisfied = 0
-
-        # Performance tracking
-        self.performance_history = {
-            'episodes': [],
-            'steps': [],
-            'satisfied_clauses': [],
-            'epsilon': [],
-            'time_per_episode': []
-        }
-        self.last_improvement_episode = 0
+        # Initialize logger if enabled
+        self.enable_logging = enable_logging
+        self.logger = None
+        self.original_step = None
+        if enable_logging:
+            self.logger = SATRLLogger(max_entries=10000, log_to_file=True, logs_dir=logs_dir)
+            # Store the original step function before wrapping
+            self.original_step = self.step
+            # Wrap the step function
+            _, self.logger = wrap_agent_step(self, None, self.logger)
     
     def _build_model(self):
-        """Build deep Q-network using the Functional API"""
-        inputs = Input(shape=(self.n_vars,))
-        x = Dense(128, activation='relu')(inputs)
-        x = Dropout(0.1)(x)  # Add dropout to prevent overfitting
-        x = Dense(128, activation='relu')(x)
-        x = Dropout(0.1)(x)
-        outputs = Dense(self.action_size, activation='linear')(x)
-        
-        model = Model(inputs=inputs, outputs=outputs)
-        model.compile(loss='mse', optimizer=Adam(learning_rate=self.learning_rate))
+        """Build the neural network model"""
+        model = nn.Sequential(
+            nn.Linear(self.state_size, self.hidden_size),
+            nn.ReLU(),
+            nn.Linear(self.hidden_size, self.hidden_size),
+            nn.ReLU(),
+            nn.Linear(self.hidden_size, self.action_size)
+        )
         return model
     
-    def reset_model(self):
-        """Reset the model while keeping the same architecture"""
-        print("Resetting model weights to random initialization")
-        self.model = self._build_model()
+    def update_target_model(self):
+        """Update the target model weights"""
+        self.target_model.load_state_dict(self.model.state_dict())
     
-    def remember(self, state, action, reward, next_state, done):
-        """Store experience in memory"""
+    def step(self, env, state, episode=None):
+        """Perform a single step in the environment"""
+        if np.random.rand() <= self.epsilon:
+            action = random.randrange(self.action_size)
+        else:
+            state_tensor = torch.FloatTensor(state).unsqueeze(0)
+            with torch.no_grad():
+                action_values = self.model(state_tensor)
+            action = torch.argmax(action_values).item()
+        
+        next_state, reward, done, _ = env.step(action)
+        next_state = self._preprocess_state(next_state)
         self.memory.append((state, action, reward, next_state, done))
+        return action, next_state, reward, done
     
-    def act(self, state):
-        """Choose an action using epsilon-greedy policy"""
-        if np.random.random() <= self.epsilon:
-            return random.randrange(self.action_size)
-        
-        # Reshape state for prediction
-        state_reshaped = np.reshape(state, [1, self.n_vars])
-        
-        # Get action values
-        act_values = self.model.predict(state_reshaped, verbose=0)
-        
-        return np.argmax(act_values[0])
+    def _preprocess_state(self, state):
+        """Preprocess the state (e.g., normalization)"""
+        return np.array(state)
     
     def replay(self):
-        """Train the network using experience replay"""
-        # Need enough samples in memory
+        """Train the model using experience replay"""
         if len(self.memory) < self.batch_size:
             return
         
-        # Sample a batch from memory
         minibatch = random.sample(self.memory, self.batch_size)
+        states, actions, rewards, next_states, dones = zip(*minibatch)
         
-        for state, action, reward, next_state, done in minibatch:
-            # Reshape states for prediction
-            state_reshaped = np.reshape(state, [1, self.n_vars])
-            next_state_reshaped = np.reshape(next_state, [1, self.n_vars])
-            
-            # If done, target is just the reward, otherwise include future discounted reward
-            if done:
-                target = reward
-            else:
-                # Double DQN approach for more stable learning
-                a = np.argmax(self.model.predict(next_state_reshaped, verbose=0)[0])
-                target = reward + self.gamma * self.model.predict(next_state_reshaped, verbose=0)[0][a]
-            
-            # Update the target for the chosen action
-            target_f = self.model.predict(state_reshaped, verbose=0)
-            target_f[0][action] = target
-            
-            # Train the network
-            self.model.fit(state_reshaped, target_f, epochs=1, verbose=0)
+        states_tensor = torch.FloatTensor(states)
+        next_states_tensor = torch.FloatTensor(next_states)
+        actions_tensor = torch.LongTensor(actions)
+        rewards_tensor = torch.FloatTensor(rewards)
+        dones_tensor = torch.FloatTensor(dones)
         
-        # Decay epsilon after each replay
-        if self.epsilon > self.epsilon_min:
-            self.epsilon *= self.epsilon_decay
+        # Compute target values
+        with torch.no_grad():
+            target_q_values = self.target_model(next_states_tensor)
+            max_target_q_values = torch.max(target_q_values, dim=1)[0]
+            targets = rewards_tensor + (1 - dones_tensor) * self.gamma * max_target_q_values
+        
+        # Compute current Q values
+        current_q_values = self.model(states_tensor).gather(1, actions_tensor.unsqueeze(1)).squeeze()
+        
+        # Compute loss and optimize
+        loss = nn.MSELoss()(current_q_values, targets)
+        self.optimizer.zero_grad()
+        loss.backward()
+        self.optimizer.step()
     
-    def apply_action(self, state, action):
-        """Apply the chosen action to the state"""
-        var_idx = action // 2  # Which variable to change
-        new_value = action % 2  # 0 or 1
-        
-        # Create a copy of the state
-        new_state = state.copy()
-        
-        # Apply the action
-        new_state[var_idx] = new_value
-        
-        return new_state
-    
-    def count_satisfied_clauses(self, state):
-        """Count how many clauses are satisfied by the current assignment"""
-        satisfied = 0
-        
-        for clause in self.clauses:
-            # Check if any literal in the clause is satisfied
-            for literal in clause:
-                var = abs(literal) - 1  # Convert to 0-indexed
-                val = state[var]
-                
-                # Check if the literal is satisfied
-                if (literal > 0 and val == 1) or (literal < 0 and val == 0):
-                    satisfied += 1
-                    break
-        
-        # Update best solution if better
-        if satisfied > self.best_satisfied:
-            self.best_satisfied = satisfied
-            self.best_assignment = state.copy()
-        
-        return satisfied
-    
-    def get_reward(self, state):
-        """Calculate reward based on satisfied clauses"""
-        satisfied = self.count_satisfied_clauses(state)
-        
-        # Normalized reward between 0 and 1
-        return satisfied / len(self.clauses)
-    
-    def should_restart(self, episode, best_satisfied):
-        """Determine if a restart is needed based on progress"""
-        if self.restart_callback:
-            return self.restart_callback(episode, best_satisfied)
-            
-        # Default restart logic - no improvement for 5 episodes
-        if episode > 5:
-            episodes_without_improvement = episode - self.last_improvement_episode
-            if episodes_without_improvement >= 5:
-                return True
-        return False
-    
-    def solve(self, max_episodes=1000, max_steps=200):
-        """Solve SAT problem using Deep Q-Learning"""
-        import time
+    def train(self, env, episodes, max_steps_per_episode=1000, verbose=True):
+        """Train the agent on the given environment"""
+        all_rewards = []
+        all_steps = []
         start_time = time.time()
-        last_update = time.time()
         
-        stats = {
-            'episodes': 0,
-            'steps': [],
-            'rewards': [],
-            'best_satisfied': 0,
-            'time_per_episode': []
-        }
-        
-        for episode in range(max_episodes):
-            episode_start = time.time()
+        for episode in range(episodes):
+            state = env.reset()
+            state = self._preprocess_state(state)
+            episode_reward = 0
             
-            # Check if restart is needed
-            if self.should_restart(episode, self.best_satisfied):
-                self.reset_model()
-                # Bump up exploration after restart
-                self.epsilon = min(0.8, self.epsilon * 2.0)
-                print(f"Restarting with epsilon={self.epsilon:.4f}")
-            
-            # Initialize state (random assignment)
-            state = np.random.randint(0, 2, size=self.n_vars)
-            total_reward = 0
-            
-            for step in range(max_steps):
-                # Choose action
-                action = self.act(state)
+            for step in range(max_steps_per_episode):
+                # Use the step function (will use wrapped version if logging is enabled)
+                action, next_state, reward, done = self.step(env, state, episode=episode)
                 
-                # Apply action and get next state
-                next_state = self.apply_action(state, action)
-                
-                # Calculate reward
-                reward = self.get_reward(next_state)
-                total_reward += reward
-                
-                # Check if solution is found
-                satisfied = self.count_satisfied_clauses(next_state)
-                done = satisfied == len(self.clauses)
-                
-                # Store experience in memory
-                self.remember(state, action, reward, next_state, done)
-                
-                # Update state
+                self.replay()
                 state = next_state
+                episode_reward += reward
                 
-                # Train the network 
-                # Only train every few steps to reduce computational overhead
-                if step % 5 == 0 or done:
-                    self.replay()
-                
-                # If solution found, terminate episode
                 if done:
                     break
+            
+            # Update epsilon and track statistics
+            self.epsilon = max(self.epsilon_min, self.epsilon * self.epsilon_decay)
+            all_rewards.append(episode_reward)
+            all_steps.append(step + 1)
+            
+            if verbose:
+                print(f"Episode {episode + 1}/{episodes}, Reward: {episode_reward}, Steps: {step + 1}, Epsilon: {self.epsilon:.4f}")
+            
+            # Export logs periodically if logging is enabled
+            if self.enable_logging and episode > 0 and episode % 10 == 0:
+                log_path = self.logger.export_traces_to_csv(f"dqn_train_episode_{episode}.csv")
+                if verbose:
+                    print(f"Exported logs to {log_path}")
+        
+        # Final export of logs
+        if self.enable_logging:
+            final_log_path = self.logger.export_traces_to_csv(f"dqn_train_final.csv")
+            if verbose:
+                print(f"Final logs exported to {final_log_path}")
                 
-                # Add periodic progress indicator during long episodes
-                current_time = time.time()
-                if current_time - last_update > 30:  # Print every 30 seconds
-                    print(f"  Still working... Step {step}/{max_steps}, "
-                          f"Best so far: {self.best_satisfied}/{len(self.clauses)}, "
-                          f"Elapsed: {current_time - start_time:.1f}s")
-                    last_update = current_time
-            
-            # Update statistics
-            episode_time = time.time() - episode_start
-            stats['episodes'] += 1
-            stats['steps'].append(step + 1)
-            stats['rewards'].append(total_reward)
-            stats['best_satisfied'] = self.best_satisfied
-            stats['time_per_episode'].append(episode_time)
-            
-            # Track if we improved this episode
-            if satisfied == self.best_satisfied:
-                self.last_improvement_episode = episode
-                
-            # Update performance history
-            self.performance_history['episodes'].append(episode)
-            self.performance_history['steps'].append(step + 1)
-            self.performance_history['satisfied_clauses'].append(self.best_satisfied)
-            self.performance_history['epsilon'].append(self.epsilon)
-            self.performance_history['time_per_episode'].append(episode_time)
-            
-            # Print progress
-            print(f"Episode: {episode}, Steps: {step+1}, "
-                  f"Best satisfied: {self.best_satisfied}/{len(self.clauses)}, "
-                  f"Epsilon: {self.epsilon:.4f}, "
-                  f"Time: {episode_time:.2f}s")
-            
-            # If solution found, terminate
-            if self.best_satisfied == len(self.clauses):
-                print(f"Solution found after {episode+1} episodes!")
-                break
-                
-            # Early stopping if we've converged
-            if episode >= 20 and episode - self.last_improvement_episode >= 15:
-                print(f"Stopping early: No improvement for {episode - self.last_improvement_episode} episodes")
-                break
+                # Print statistics from logger
+                stats = self.logger.get_statistics()
+                print("\nTraining Statistics:")
+                for key, value in stats.items():
+                    print(f"  {key}: {value}")
         
         total_time = time.time() - start_time
         print(f"Training completed in {total_time:.2f} seconds")
-        print(f"Average time per episode: {total_time/stats['episodes']:.2f} seconds")
         
-        return self.best_assignment, stats
+        return all_rewards, all_steps
     
-    def visualize_learning_curve(self):
-        """Visualize the learning progress"""
-        import matplotlib.pyplot as plt
+    def save_model(self, path):
+        """Save the model weights to a file"""
+        # Create directory if it doesn't exist
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        # Save model
+        torch.save({
+            'model_state_dict': self.model.state_dict(),
+            'target_model_state_dict': self.target_model.state_dict(),
+            'optimizer_state_dict': self.optimizer.state_dict(),
+            'epsilon': self.epsilon
+        }, path)
         
-        plt.figure(figsize=(12, 8))
+    def load_model(self, path):
+        """Load the model weights from a file"""
+        if os.path.exists(path):
+            checkpoint = torch.load(path)
+            self.model.load_state_dict(checkpoint['model_state_dict'])
+            self.target_model.load_state_dict(checkpoint['target_model_state_dict'])
+            self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+            self.epsilon = checkpoint['epsilon']
+            print(f"Model loaded from {path}")
+        else:
+            print(f"No model found at {path}")
+            
+    def disable_logging(self):
+        """Disable logging and restore original step function"""
+        if self.enable_logging and self.original_step is not None:
+            self.step = self.original_step
+            self.enable_logging = False
+            print("Logging disabled, original step function restored")
+    
+    def enable_logging_with_new_logger(self, logs_dir=None):
+        """Enable logging with a new logger instance"""
+        if logs_dir is None:
+            logs_dir = f"sat_rl_logs/dqn_{int(time.time())}"
         
-        # Plot 1: Satisfied clauses over episodes
-        plt.subplot(2, 2, 1)
-        plt.plot(self.performance_history['episodes'], 
-                 self.performance_history['satisfied_clauses'])
-        plt.title('Satisfied Clauses vs Episodes')
-        plt.xlabel('Episode')
-        plt.ylabel('Satisfied Clauses')
-        plt.grid(True)
-        
-        # Plot 2: Steps per episode
-        plt.subplot(2, 2, 2)
-        plt.plot(self.performance_history['episodes'], 
-                 self.performance_history['steps'])
-        plt.title('Steps per Episode')
-        plt.xlabel('Episode')
-        plt.ylabel('Steps')
-        plt.grid(True)
-        
-        # Plot 3: Epsilon decay
-        plt.subplot(2, 2, 3)
-        plt.plot(self.performance_history['episodes'], 
-                 self.performance_history['epsilon'])
-        plt.title('Epsilon Decay')
-        plt.xlabel('Episode')
-        plt.ylabel('Epsilon')
-        plt.grid(True)
-        
-        # Plot 4: Time per episode
-        plt.subplot(2, 2, 4)
-        plt.plot(self.performance_history['episodes'], 
-                 self.performance_history['time_per_episode'])
-        plt.title('Time per Episode')
-        plt.xlabel('Episode')
-        plt.ylabel('Time (s)')
-        plt.grid(True)
-        
-        plt.tight_layout()
-        plt.savefig('dqn_learning_curve.png')
-        plt.close()
-        print("Learning curve visualization saved to dqn_learning_curve.png")
+        self.logger = SATRLLogger(max_entries=10000, log_to_file=True, logs_dir=logs_dir)
+        # Store original step if not already stored
+        if self.original_step is None:
+            self.original_step = self.step
+        # Wrap the step function
+        _, self.logger = wrap_agent_step(self, None, self.logger)
+        self.enable_logging = True
+        print(f"Logging enabled with new logger to {logs_dir}")

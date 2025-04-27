@@ -1,183 +1,134 @@
 #!/usr/bin/env python3
 """
-Demonstration of SAT+RL enhancements.
-This script shows how to use the improved SAT solving techniques.
+SAT RL Demo - Demonstration script for SAT Reinforcement Learning agents
 """
 
-import numpy as np
-import random
-import time
 import argparse
-from deep_q_sat_agent import DeepQLearningAgent
-from improved_sat_gan import ImprovedSATGAN
-from oracle_distillation_agent import OracleDistillationAgent
+import time
+import os
+from deep_q_sat_agent import DeepQSATAgent
 from curriculum_sat_learner import CurriculumSATLearner
-from anytime_sat_solver import AnytimeSATSolver, AnytimeEnsembleSolver
+from sat_rl_logger import SATRLLogger
+import matplotlib.pyplot as plt
 
-
-def generate_random_sat_problem(n_vars, ratio, unique_clauses=True):
-    """Generate a random 3-SAT problem with given clause-to-variable ratio"""
-    n_clauses = int(ratio * n_vars)
-    clauses = []
-    clause_set = set()
+def run_demo(agent_type, n_vars, n_clauses, episodes, visualize=False):
+    """Run a demonstration with the specified agent type"""
+    print(f"Running demo with {agent_type} agent on {n_vars}-variable, {n_clauses}-clause SAT problem")
     
-    while len(clauses) < n_clauses:
-        # Generate a random clause with 3 literals (3-SAT)
-        vars_in_clause = random.sample(range(1, n_vars + 1), 3)
+    # Create logs directory
+    logs_dir = f"sat_rl_logs/{agent_type}/{int(time.time())}"
+    os.makedirs(logs_dir, exist_ok=True)
+    
+    # Set up problem and agent with logging enabled
+    if agent_type == "dqn":
+        agent = DeepQSATAgent(
+            state_size=n_vars, 
+            action_size=n_vars * 2,  # For each variable: set true or false
+            enable_logging=True,
+            logs_dir=logs_dir
+        )
         
-        # Randomly negate some variables
-        clause = [var if random.random() > 0.5 else -var for var in vars_in_clause]
+        # Run training with logging
+        print("Training DQN agent...")
+        rewards, steps = agent.train(episodes=episodes, verbose=True)
         
-        # Convert to tuple for set operations
-        clause_tuple = tuple(sorted(clause, key=abs))
+        # Export final logs and visualize results if requested
+        if visualize:
+            plt.figure(figsize=(10, 5))
+            plt.subplot(1, 2, 1)
+            plt.plot(rewards)
+            plt.title("Rewards per Episode")
+            plt.xlabel("Episode")
+            plt.ylabel("Total Reward")
+            
+            plt.subplot(1, 2, 2)
+            plt.plot(steps)
+            plt.title("Steps per Episode")
+            plt.xlabel("Episode")
+            plt.ylabel("Steps")
+            
+            plt.tight_layout()
+            plt.savefig(f"{logs_dir}/training_progress.png")
+            print(f"Training visualization saved to {logs_dir}/training_progress.png")
         
-        # Add clause if unique or if not enforcing uniqueness
-        if not unique_clauses or clause_tuple not in clause_set:
-            clauses.append(clause)
-            if unique_clauses:
-                clause_set.add(clause_tuple)
-    
-    return clauses
+    elif agent_type == "curriculum":
+        # Default settings for curriculum learning
+        initial_ratio = 3.0
+        target_ratio = 4.2
+        step_size = 0.2
+        
+        # Initialize with logging enabled
+        curriculum = CurriculumSATLearner(
+            n_vars=n_vars, 
+            initial_ratio=initial_ratio,
+            target_ratio=target_ratio,
+            step_size=step_size,
+            enable_logging=True,
+            logs_dir=logs_dir
+        )
+        
+        # Run curriculum learning
+        print(f"Running curriculum learning from ratio {initial_ratio} to {target_ratio}...")
+        solution, satisfied = curriculum.solve_with_curriculum(max_attempts=5)
+        
+        print(f"Curriculum learning complete. Satisfied {satisfied} out of {int(target_ratio * n_vars)} clauses.")
+        
+    else:
+        print(f"Unknown agent type: {agent_type}")
 
+def analyze_logs(log_file_path):
+    """Analyze logs from a previously run experiment"""
+    print(f"Analyzing logs from {log_file_path}")
+    
+    # Create a logger instance just for analysis
+    logger = SATRLLogger(log_to_file=False)
+    
+    # Load logs from file
+    loaded = logger.load_traces_from_csv(log_file_path)
+    if not loaded:
+        print(f"Failed to load logs from {log_file_path}")
+        return
+    
+    # Print statistics
+    stats = logger.get_statistics()
+    print("\nLog Statistics:")
+    for key, value in stats.items():
+        print(f"  {key}: {value}")
+    
+    # Generate visualizations
+    vis_dir = os.path.dirname(log_file_path) + "/visualizations"
+    os.makedirs(vis_dir, exist_ok=True)
+    
+    # Generate reward over time plot
+    logger.visualize_rewards(save_path=f"{vis_dir}/rewards.png")
+    print(f"Reward visualization saved to {vis_dir}/rewards.png")
+    
+    # Generate action distribution plot
+    logger.visualize_action_distribution(save_path=f"{vis_dir}/actions.png")
+    print(f"Action distribution visualization saved to {vis_dir}/actions.png")
+    
+    # Generate state transitions plot if available
+    logger.visualize_state_transitions(save_path=f"{vis_dir}/state_transitions.png")
+    print(f"State transition visualization saved to {vis_dir}/state_transitions.png")
 
-def run_deep_q_learning(n_vars, clauses, max_episodes=500):
-    """Run the Deep Q-Learning approach"""
-    print("\n=== Deep Q-Learning Agent ===")
-    start_time = time.time()
-    
-    agent = DeepQLearningAgent(n_vars, clauses)
-    solution, stats = agent.solve(max_episodes=max_episodes)
-    
-    elapsed = time.time() - start_time
-    
-    print(f"Deep Q-Learning completed in {elapsed:.2f} seconds")
-    print(f"Episodes: {stats['episodes']}")
-    print(f"Best satisfied: {stats['best_satisfied']}/{len(clauses)}")
-    
-    return solution, stats
-
-
-def run_improved_gan(n_vars, clauses, epochs=100):
-    """Run the Improved SATGAN approach with experience replay"""
-    print("\n=== Improved SATGAN with Experience Replay ===")
-    start_time = time.time()
-    
-    gan = ImprovedSATGAN(n_vars, clauses, epochs=epochs)
-    gan.train_with_experience_replay()
-    solution = gan.solve(max_generations=50)
-    
-    elapsed = time.time() - start_time
-    
-    # Count satisfied clauses
-    satisfied = 0
-    for clause in clauses:
-        for literal in clause:
-            var = abs(literal) - 1  # Convert to 0-indexed
-            val = solution[var]
-            if (literal > 0 and val == 1) or (literal < 0 and val == 0):
-                satisfied += 1
-                break
-    
-    print(f"Improved SATGAN completed in {elapsed:.2f} seconds")
-    print(f"Satisfied: {satisfied}/{len(clauses)}")
-    
-    return solution, {'satisfied': satisfied}
-
-
-def run_oracle_distillation(n_vars, clauses):
-    """Run the Oracle Distillation approach"""
-    print("\n=== Oracle Distillation Agent ===")
-    start_time = time.time()
-    
-    agent = OracleDistillationAgent(n_vars, clauses)
-    solution, satisfied = agent.solve()
-    
-    elapsed = time.time() - start_time
-    
-    print(f"Oracle Distillation completed in {elapsed:.2f} seconds")
-    print(f"Satisfied: {satisfied}/{len(clauses)}")
-    
-    return solution, {'satisfied': satisfied}
-
-
-def run_curriculum_learning(n_vars, target_ratio=4.2):
-    """Run the Curriculum Learning approach"""
-    print("\n=== Curriculum Learning ===")
-    start_time = time.time()
-    
-    learner = CurriculumSATLearner(n_vars, initial_ratio=3.0, target_ratio=target_ratio)
-    solution, best_satisfied = learner.solve_with_curriculum()
-    
-    elapsed = time.time() - start_time
-    
-    print(f"Curriculum Learning completed in {elapsed:.2f} seconds")
-    print(f"Final satisfied: {best_satisfied}/{len(learner.target_clauses)}")
-    
-    return solution, {'satisfied': best_satisfied}
-
-
-def run_anytime_solver(n_vars, clauses, time_limit=30):
-    """Run the Anytime SAT Solver"""
-    print("\n=== Anytime SAT Solver ===")
-    
-    solver = AnytimeSATSolver(n_vars, clauses, time_limit=time_limit)
-    solution, stats = solver.solve_with_local_search(max_iterations=100000)
-    
-    print("\nGenerating visualization...")
-    solver.visualize_progress()
-    
-    return solution, stats
-
-
-def run_ensemble_solver(n_vars, clauses, time_limit=30):
-    """Run the Ensemble Anytime Solver"""
-    print("\n=== Ensemble Anytime Solver ===")
-    
-    solver = AnytimeEnsembleSolver(n_vars, clauses, time_limit=time_limit)
-    solution, stats = solver.solve()
-    
-    print("\nGenerating visualization...")
-    solver.visualize_progress()
-    
-    return solution, stats
-
-
-def main():
-    parser = argparse.ArgumentParser(description="SAT+RL Enhanced Demonstration")
-    parser.add_argument("--n_vars", type=int, default=20, help="Number of variables")
-    parser.add_argument("--ratio", type=float, default=4.2, help="Clause-to-variable ratio")
-    parser.add_argument("--method", type=str, 
-                        choices=['dqn', 'gan', 'oracle', 'curriculum', 'anytime', 'ensemble', 'all'],
-                        default='all', help="Method to run")
-    parser.add_argument("--time_limit", type=int, default=30, 
-                        help="Time limit for anytime solvers (seconds)")
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Run SAT RL demonstrations")
+    parser.add_argument("--agent", type=str, choices=["dqn", "curriculum"], default="dqn",
+                        help="Agent type to use")
+    parser.add_argument("--vars", type=int, default=20, 
+                        help="Number of variables")
+    parser.add_argument("--clauses", type=int, default=80,
+                        help="Number of clauses")
+    parser.add_argument("--episodes", type=int, default=100,
+                        help="Number of training episodes")
+    parser.add_argument("--visualize", action="store_true",
+                        help="Generate visualizations")
+    parser.add_argument("--analyze", type=str, default=None,
+                        help="Analyze an existing log file instead of running training")
     
     args = parser.parse_args()
     
-    # Generate problem
-    print(f"Generating 3-SAT problem with {args.n_vars} variables and ratio {args.ratio}")
-    clauses = generate_random_sat_problem(args.n_vars, args.ratio)
-    print(f"Generated {len(clauses)} clauses")
-    
-    # Run selected method(s)
-    if args.method == 'dqn' or args.method == 'all':
-        run_deep_q_learning(args.n_vars, clauses)
-    
-    if args.method == 'gan' or args.method == 'all':
-        run_improved_gan(args.n_vars, clauses)
-    
-    if args.method == 'oracle' or args.method == 'all':
-        run_oracle_distillation(args.n_vars, clauses)
-    
-    if args.method == 'curriculum' or args.method == 'all':
-        run_curriculum_learning(args.n_vars, args.ratio)
-    
-    if args.method == 'anytime' or args.method == 'all':
-        run_anytime_solver(args.n_vars, clauses, args.time_limit)
-    
-    if args.method == 'ensemble' or args.method == 'all':
-        run_ensemble_solver(args.n_vars, clauses, args.time_limit)
-    
-
-if __name__ == "__main__":
-    main()
+    if args.analyze:
+        analyze_logs(args.analyze)
+    else:
+        run_demo(args.agent, args.vars, args.clauses, args.episodes, args.visualize)
