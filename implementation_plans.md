@@ -38,10 +38,99 @@ This roadmap outlines the phased development of a hybrid multi-agent reinforceme
   - [x] Plan for advanced visualization integration:
     - [x] Prepare data collection hooks for S3 (Clause-Satisfaction Heatmap)
     - [x] Design extensible visualization API to accommodate future T3/P1/M1/M2 views
-- [ ] **1.5 Standard Experience Format**
-  - [ ] Define a format (JSONL or MsgPack) to store (state, action, reward, next_state, done)
-  - [ ] Enable replay buffer export for distillation or analysis
-  - [ ] Include metadata for tracking experiment conditions and hyperparameters
+- [ ] **1.5 Enhanced Experience Format**
+  - [ ] **Core Format Enhancements**
+    - [ ] **Type System Improvements**
+      - [ ] Define explicit dtype specification for all fields (float32/64, int32/64, etc.)
+      - [ ] Support for complex observation spaces (Dict, Tuple, Nested)
+      - [ ] Create validation utilities for type checking
+      - [ ] Document type conversion handling between languages/frameworks
+    - [ ] **Advanced Storage Backends**
+      - [ ] Implement Apache Arrow/Parquet support
+        - [ ] Zero-copy reading into numpy/torch/tensorflow
+        - [ ] Column-based compression
+        - [ ] Predicate pushdown for filtered loading
+      - [ ] Add HDF5 backend option
+        - [ ] Chunked dataset support
+        - [ ] Hierarchical organization
+      - [ ] Memory-mapped file support for large datasets
+    - [ ] **Metadata Enrichment**
+      - [ ] Git repository tracking (commit hash, branch, dirty status)
+      - [ ] Per-episode random seeds for perfect reproducibility
+      - [ ] Hardware fingerprinting (GPU model, driver version, CUDA version)
+      - [ ] Store metadata once per file to reduce storage requirements
+      - [ ] Add experiment tags and searchable attributes
+
+  - [ ] **Performance Optimizations**
+    - [ ] **Indexing and Fast Access**
+      - [ ] Generate index files with transition offsets
+      - [ ] Implement O(1) random sampling using indices
+      - [ ] Support for prioritized experience replay weights
+    - [ ] **Concurrent Operations**
+      - [ ] Writer locking mechanisms for multi-actor systems
+      - [ ] Sharded files for parallel writers
+      - [ ] Thread-safe reader implementation
+    - [ ] **Compression Strategy**
+      - [ ] Configurable compression options (none, zstd, gzip, lz4)
+      - [ ] Separate compression levels for different fields
+      - [ ] Transparent decompression during loading
+
+  - [ ] **Framework Integration**
+    - [ ] **PyTorch Ecosystem**
+      - [ ] IterableDataset implementation for streaming
+      - [ ] Map-style Dataset for random access
+      - [ ] Collate functions for batching
+    - [ ] **TensorFlow/JAX Support**
+      - [ ] tf.data pipeline generators
+      - [ ] JAX-compatible data loading utilities
+    - [ ] **Common Processing Functions**
+      - [ ] Standardization/normalization utilities
+      - [ ] N-step return calculation
+      - [ ] Reward scaling transformations
+
+  - [ ] **Ecosystem Compatibility**
+    - [ ] **Format Conversion Tools**
+      - [ ] Import/export for RLDS TFRecord format
+      - [ ] Import/export for D4RL HDF format
+      - [ ] Converter for OpenAI Gym recordings
+    - [ ] **Visualization and Analysis**
+      - [ ] TensorBoard logging hooks
+      - [ ] Weights & Biases integration
+      - [ ] Jupyter notebook visualization utilities
+    - [ ] **External Tool Support**
+      - [ ] Command-line inspection utilities
+      - [ ] HTTP API for remote dataset exploration
+      - [ ] Integration with experiment tracking systems
+
+  - [ ] **Operational Features**
+    - [ ] **Data Lifecycle Management**
+      - [ ] Automatic pruning of old experience data
+      - [ ] Progressive downsampling for archival storage
+      - [ ] Retention policies based on reward or surprise
+    - [ ] **Quality Assurance**
+      - [ ] Automated validation of dataset integrity
+      - [ ] Statistics generation (min/max/mean/std)
+      - [ ] Anomaly detection for corrupt transitions
+    - [ ] **Performance Benchmarking**
+      - [ ] Read/write throughput measurement
+      - [ ] Comparison suite across storage backends
+      - [ ] Memory usage profiling
+
+  - [ ] **Documentation and Standards**
+    - [ ] **Format Specification**
+      - [ ] Published schema documentation
+      - [ ] Examples for common environment types
+      - [ ] Version compatibility guidelines
+    - [ ] **Best Practices Guide**
+      - [ ] Storage recommendations for different scales
+      - [ ] Performance tuning guidelines
+      - [ ] Migration paths between versions
+    - [ ] **Reference Implementations**
+      - [ ] Python implementation
+      - [ ] C++/CUDA accelerated version
+      - [ ] JavaScript reader for web visualization
+
+
 
 ### 📊 Success Criteria
 - All tests pass with >90% coverage for core components
