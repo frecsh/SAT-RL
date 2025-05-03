@@ -289,7 +289,7 @@ def generate_phase_transition_problems(output_dir: str,
         instances_per_config: Number of instances to generate per configuration
         seed: Random seed for reproducibility
     """
-    from sat_problems import generate_sat_problem  # Import here to avoid circular imports
+    from src.sat_problems import generate_sat_problem  # Import here to avoid circular imports
     
     os.makedirs(output_dir, exist_ok=True)
     random.seed(seed)

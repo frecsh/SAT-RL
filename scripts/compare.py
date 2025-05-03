@@ -6,7 +6,7 @@ import os
 
 # Try to import the multi-agent solvers
 try:
-    from multi_q_sat import MultiQLearningSAT
+    from src.agents.multi_q_sat import MultiQLearningSAT
     def cooperative_main(problem):
         # Create and run cooperative multi-agent solver
         solver = MultiQLearningSAT(problem['num_vars'], problem['clauses'], n_agents=5)
@@ -18,7 +18,7 @@ except ImportError as e:
         return {"solution_found": False, "runtime": 0, "episode_rewards": [], "best_reward_progress": []}
 
 try:
-    from multi_q_sat_comp import MultiQLearningSATCompetitive
+    from src.agents.multi_q_sat_comp import MultiQLearningSATCompetitive
     def competitive_main(problem):
         # Create and run competitive multi-agent solver
         solver = MultiQLearningSATCompetitive(problem['num_vars'], problem['clauses'], n_agents=5)
@@ -30,7 +30,7 @@ except ImportError as e:
         return {"solution_found": False, "runtime": 0, "episode_rewards": [], "best_reward_progress": []}
 
 try:
-    from multi_q_sat_comm import MultiQLearningSATCommunicative
+    from src.agents.multi_q_sat_comm import MultiQLearningSATCommunicative
     def communicative_main(problem):
         # Create and run communicative multi-agent solver
         solver = MultiQLearningSATCommunicative(problem['num_vars'], problem['clauses'], n_agents=5)
@@ -41,7 +41,7 @@ except ImportError as e:
     def communicative_main(problem):
         return {"solution_found": False, "runtime": 0, "episode_rewards": [], "best_reward_progress": []}
 
-from sat_problems import PROBLEM_COLLECTION
+from src.sat_problems import PROBLEM_COLLECTION
 
 # Define image directory
 IMAGES_DIR = 'images'
@@ -49,7 +49,7 @@ os.makedirs(IMAGES_DIR, exist_ok=True)
 
 def run_comparison(problems=None, n_runs=3, include_communicative=True):
     if problems is None:
-        from sat_problems import SMALL_PROBLEM, MEDIUM_PROBLEM
+        from src.sat_problems import SMALL_PROBLEM, MEDIUM_PROBLEM
         problems = [SMALL_PROBLEM, MEDIUM_PROBLEM]
     
     all_results = {}

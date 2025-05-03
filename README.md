@@ -23,7 +23,6 @@ Reinforcement Learning brings unique advantages to SAT solving:
 - **Adaptability**: Can fine-tune strategies for specific problem domains
 - **Exploration-exploitation balance**: Can intelligently explore the solution space
 - **Transfer learning**: Can apply knowledge from similar problems
-y
 
 ### Project Visualizations
 The project now includes a comprehensive suite of visualization tools for analyzing agent behavior:
@@ -220,40 +219,47 @@ processor = run_solver_and_visualize(
 ## Project Structure
 
 ```
-/SAT+RL
-├── main.py                      # Core SAT environment
-├── sat_problems.py              # Library of SAT problem definitions
-├── multi_q_sat.py               # Cooperative Q-learning implementation
-├── multi_q_sat_comp.py          # Competitive Q-learning implementation
-├── multi_q_sat_comm.py          # Communicative Q-learning implementation
-├── multi_q_sat_oracle.py        # Oracle-guided Q-learning implementation
-├── multi_q_sat_gan_improved.py  # GAN-enhanced Q-learning implementation
-├── sat_oracle.py                # Traditional SAT solver oracle
-├── sat_gan.py                   # GAN-based generator for SAT variable assignments
-├── progressive_sat_gan.py       # Progressive training for SAT-GAN models
-├── deep_q_sat_agent.py          # Deep Q-Learning with neural network function approximation
-├── improved_sat_gan.py          # Enhanced GAN with experience replay buffer
-├── oracle_distillation_agent.py # Knowledge distillation from SAT oracles
-├── curriculum_sat_learner.py    # Curriculum learning to tackle phase transition
-├── anytime_sat_solver.py        # Anytime SAT solving with solution quality bounds
-├── sat_rl_demo.py               # Demonstration of all enhanced approaches
-├── compare.py                   # Comparison script for different agent approaches
-├── analyze_benchmarks.py        # Analysis of solver performance and phase transition
-├── generate_architecture_diagram.py  # Creates visual representation of project components
-├── utils/                       # Utility modules
-│   ├── logging_utils.py         # Structured logging with visualization support
-│   └── data_processor.py        # Data processing for visualization
-└── agent_behavior_visualization.ipynb # Jupyter notebook for visualizing agent behavior
+.
+├── pyproject.toml               # Project configuration and dependencies
+├── README.md                    # Project documentation
+├── implementation_plans.md      # Implementation plan progress
+├── sat_rl_architecture.png      # Architecture diagram
+├── src/                         # Source code directory
+│   ├── main.py                  # Core SAT environment
+│   ├── sat_problems.py          # Library of SAT problem definitions
+│   ├── agents/                  # Agent implementations
+│   │   ├── multi_q_sat.py       # Cooperative Q-learning implementation
+│   │   ├── multi_q_sat_comp.py  # Competitive Q-learning implementation
+│   │   ├── multi_q_sat_comm.py  # Communicative Q-learning implementation
+│   │   ├── multi_q_sat_oracle.py  # Oracle-guided Q-learning implementation
+│   │   ├── deep_q_sat_agent.py  # Deep Q-Learning with neural network function approximation
+│   │   ├── oracle_distillation_agent.py  # Knowledge distillation from SAT oracles
+│   │   ├── curriculum_sat_learner.py  # Curriculum learning to tackle phase transition
+│   │   └── anytime_sat_solver.py  # Anytime SAT solving with solution quality bounds
+│   ├── models/                  # Model implementations
+│   │   ├── sat_gan.py           # GAN-based generator for SAT variable assignments
+│   │   ├── progressive_sat_gan.py  # Progressive training for SAT-GAN models
+│   │   ├── improved_sat_gan.py  # Enhanced GAN with experience replay buffer
+│   │   └── multi_q_sat_gan_improved.py  # GAN-enhanced Q-learning implementation
+│   ├── oracles/                 # Oracle implementations
+│   │   └── sat_oracle.py        # Traditional SAT solver oracle
+│   └── utils/                   # Utility modules
+│       ├── logging_utils.py     # Structured logging with visualization support
+│       └── data_processor.py    # Data processing for visualization
+├── scripts/                     # Scripts for running experiments
+│   ├── sat_rl_demo.py           # Demonstration of all enhanced approaches
+│   ├── compare.py               # Comparison script for different agent approaches
+│   ├── analyze_benchmarks.py    # Analysis of solver performance and phase transition
+│   └── generate_architecture_diagram.py  # Creates visual representation of project components
+├── notebooks/                   # Jupyter notebooks
+│   └── agent_behavior_visualization.ipynb  # Notebook for visualizing agent behavior
+└── tests/                       # Test directory
+    └── test_sat_solver.py       # Tests for SAT solver components
 ```
-
-### Project Structure
-
 
 ![Architecture of the SAT+RL Project](sat_rl_architecture.png)
 
-
 ## Getting Started
-
 
 ### Prerequisites
 
@@ -273,8 +279,20 @@ python-sat (optional, for oracle functionality)
 
 ### Installation
 
+You can install the project in several ways:
+
 ```bash
+# Install using pip with requirements.txt
 pip install -r requirements.txt
+
+# Or install using pyproject.toml (recommended)
+pip install -e .
+
+# Install with development dependencies
+pip install -e ".[dev]"
+
+# Install with visualization dependencies
+pip install -e ".[visualization]"
 ```
 
 ### Running Experiments

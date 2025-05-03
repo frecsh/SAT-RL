@@ -8,8 +8,8 @@ import numpy as np
 import random
 import time
 from typing import List, Tuple, Dict, Any, Optional
-from sat_problems import count_satisfied_clauses, is_satisfied, random_walksat
-from multi_q_sat import MultiQLearningSAT
+from src.sat_problems import count_satisfied_clauses, is_satisfied, random_walksat
+from src.agents.multi_q_sat import MultiQLearningSAT
 
 class MultiQLearningSATOracle(MultiQLearningSAT):
     """
@@ -302,7 +302,7 @@ class MultiQLearningSATOracle(MultiQLearningSAT):
 
 if __name__ == "__main__":
     # Example usage
-    from sat_problems import generate_sat_problem
+    from src.sat_problems import generate_sat_problem
     
     # Generate a small SAT problem
     n_vars = 20

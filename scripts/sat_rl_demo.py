@@ -6,8 +6,8 @@ SAT RL Demo - Demonstration script for SAT Reinforcement Learning agents
 import argparse
 import time
 import os
-from deep_q_sat_agent import DeepQSATAgent
-from curriculum_sat_learner import CurriculumSATLearner
+from src.agents.deep_q_sat_agent import DeepQSATAgent
+from src.agents.curriculum_sat_learner import CurriculumSATLearner
 from sat_rl_logger import SATRLLogger
 import matplotlib.pyplot as plt
 

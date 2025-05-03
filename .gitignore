@@ -5,6 +5,12 @@ __pycache__/
 *.so
 .Python
 env/
+venv/
+ENV/
+.env
+.venv
+env.bak/
+venv.bak/
 build/
 develop-eggs/
 dist/
@@ -19,33 +25,86 @@ var/
 *.egg-info/
 .installed.cfg
 *.egg
+
+# Distribution / packaging
 *.zip
 *.tar.gz
+*.tgz
+*.whl
+
+# Project specific dependencies
 glucose-4.2.1/
 debug_satgan.py
 update_environment.sh
 
-# Experiment results
+# Experiment data and outputs
+logs/
+results/
 *.pkl
 *.csv
+metadata/
+!metadata/.gitkeep
 
-# Keep visualization examples
+# Model files
+models/
+!models/.gitkeep
+
+# Images
+images/
 !examples/*.png
+
+# Project utility scripts (temporary)
+fix_imports.py
+organize_project.py
+
+# Testing
+.coverage
+htmlcov/
+.pytest_cache/
+coverage.xml
+nosetests.xml
+pytest.xml
 
 # IDE files
 .idea/
 .vscode/
 *.swp
 *.swo
+*.sublime-project
+*.sublime-workspace
+.project
+.pydevproject
+.spyderproject
+.spyproject
 
-# OS specific
+# Jupyter Notebook
+.ipynb_checkpoints
+notebooks/.ipynb_checkpoints/
+
+# Documentation
+docs/_build/
+docs/generated/
+doc/_build/
+doc/generated/
+
+# OS specific files
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
-# Image files
-images/
-!examples/*.png
 
+# Profiling and debugging
+*.prof
+*.lprof
+*.log
+*.out
+.benchmarks/
 
-#Personal Files
-logs/
-examples/
+# Cache directories
+.cache/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/

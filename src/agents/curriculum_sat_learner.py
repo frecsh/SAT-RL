@@ -9,9 +9,9 @@ import time
 import os
 import json
 import matplotlib.pyplot as plt
-from deep_q_sat_agent import DeepQLearningAgent
-from improved_sat_gan import ImprovedSATGAN
-from anytime_sat_solver import AnytimeEnsembleSolver
+from src.agents.deep_q_sat_agent import DeepQLearningAgent
+from src.models.improved_sat_gan import ImprovedSATGAN
+from src.agents.anytime_sat_solver import AnytimeEnsembleSolver
 import tensorflow as tf
 from sat_rl_logger import SATRLLogger, wrap_agent_step
 

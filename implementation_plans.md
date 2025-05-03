@@ -39,27 +39,27 @@ This roadmap outlines the phased development of a hybrid multi-agent reinforceme
     - [x] Prepare data collection hooks for S3 (Clause-Satisfaction Heatmap)
     - [x] Design extensible visualization API to accommodate future T3/P1/M1/M2 views
 - [ ] **1.5 Enhanced Experience Format**
-  - [ ] **Core Format Enhancements**
-    - [ ] **Type System Improvements**
-      - [ ] Define explicit dtype specification for all fields (float32/64, int32/64, etc.)
-      - [ ] Support for complex observation spaces (Dict, Tuple, Nested)
-      - [ ] Create validation utilities for type checking
-      - [ ] Document type conversion handling between languages/frameworks
-    - [ ] **Advanced Storage Backends**
-      - [ ] Implement Apache Arrow/Parquet support
-        - [ ] Zero-copy reading into numpy/torch/tensorflow
-        - [ ] Column-based compression
-        - [ ] Predicate pushdown for filtered loading
-      - [ ] Add HDF5 backend option
-        - [ ] Chunked dataset support
-        - [ ] Hierarchical organization
-      - [ ] Memory-mapped file support for large datasets
-    - [ ] **Metadata Enrichment**
-      - [ ] Git repository tracking (commit hash, branch, dirty status)
-      - [ ] Per-episode random seeds for perfect reproducibility
-      - [ ] Hardware fingerprinting (GPU model, driver version, CUDA version)
-      - [ ] Store metadata once per file to reduce storage requirements
-      - [ ] Add experiment tags and searchable attributes
+  - [x] **Core Format Enhancements**
+    - [x] **Type System Improvements**
+      - [x] Define explicit dtype specification for all fields (float32/64, int32/64, etc.)
+      - [x] Support for complex observation spaces (Dict, Tuple, Nested)
+      - [x] Create validation utilities for type checking
+      - [x] Document type conversion handling between languages/frameworks
+    - [x] **Advanced Storage Backends**
+      - [x] Implement Apache Arrow/Parquet support
+        - [x] Zero-copy reading into numpy/torch/tensorflow
+        - [x] Column-based compression
+        - [x] Predicate pushdown for filtered loading
+      - [x] Add HDF5 backend option
+        - [x] Chunked dataset support
+        - [x] Hierarchical organization
+      - [x] Memory-mapped file support for large datasets
+    - [x] **Metadata Enrichment**
+      - [x] Git repository tracking (commit hash, branch, dirty status)
+      - [x] Per-episode random seeds for perfect reproducibility
+      - [x] Hardware fingerprinting (GPU model, driver version, CUDA version)
+      - [x] Store metadata once per file to reduce storage requirements
+      - [x] Add experiment tags and searchable attributes
 
   - [ ] **Performance Optimizations**
     - [ ] **Indexing and Fast Access**

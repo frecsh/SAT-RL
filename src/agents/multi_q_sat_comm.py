@@ -8,7 +8,7 @@ import time
 import numpy as np
 import random
 from collections import defaultdict, deque
-from sat_problems import count_satisfied_clauses, generate_sat_problem
+from src.sat_problems import count_satisfied_clauses, generate_sat_problem
 
 class MultiQLearningSATCommunicative:
     """Multi-agent Q-Learning for SAT problems with communicative agents"""

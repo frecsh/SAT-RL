@@ -16,8 +16,8 @@ import sys
 # Add the project root to the path so we can import our modules
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from utils.logging_utils import StructuredLogger, create_logger, NumpyJSONEncoder
-from utils.exceptions import (
+from src.utils.logging_utils import StructuredLogger, create_logger, NumpyJSONEncoder
+from src.utils.exceptions import (
     SATBaseException, UnsatisfiableError, SolverTimeoutError, 
     InconsistentAssignmentError, InvalidClauseError
 )

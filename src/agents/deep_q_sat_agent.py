@@ -241,7 +241,7 @@ class DeepQSATAgent:
               update_frequency=4, target_update=100, verbose=False):
         """Train the agent on the SAT environment"""
         if env is None:
-            from sat_problems import SATEnvironment
+            from src.sat_problems import SATEnvironment
             env = SATEnvironment()
         
         rewards = []

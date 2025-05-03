@@ -157,7 +157,7 @@ class SATOracle:
 
 def test_oracle():
     """Test the SAT Oracle functionality"""
-    from sat_problems import MEDIUM_PROBLEM
+    from src.sat_problems import MEDIUM_PROBLEM
     
     oracle = SATOracle(MEDIUM_PROBLEM)
     
