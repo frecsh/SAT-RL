@@ -61,19 +61,19 @@ This roadmap outlines the phased development of a hybrid multi-agent reinforceme
       - [x] Store metadata once per file to reduce storage requirements
       - [x] Add experiment tags and searchable attributes
 
-  - [ ] **Performance Optimizations**
-    - [ ] **Indexing and Fast Access**
-      - [ ] Generate index files with transition offsets
-      - [ ] Implement O(1) random sampling using indices
-      - [ ] Support for prioritized experience replay weights
-    - [ ] **Concurrent Operations**
-      - [ ] Writer locking mechanisms for multi-actor systems
-      - [ ] Sharded files for parallel writers
-      - [ ] Thread-safe reader implementation
-    - [ ] **Compression Strategy**
-      - [ ] Configurable compression options (none, zstd, gzip, lz4)
-      - [ ] Separate compression levels for different fields
-      - [ ] Transparent decompression during loading
+  - [x] **Performance Optimizations**
+    - [x] **Indexing and Fast Access**
+      - [x] Generate index files with transition offsets
+      - [x] Implement O(1) random sampling using indices
+      - [x] Support for prioritized experience replay weights
+    - [x] **Concurrent Operations**
+      - [x] Writer locking mechanisms for multi-actor systems
+      - [x] Sharded files for parallel writers
+      - [x] Thread-safe reader implementation
+    - [x] **Compression Strategy**
+      - [x] Configurable compression options (none, zstd, gzip, lz4)
+      - [x] Separate compression levels for different fields
+      - [x] Transparent decompression during loading
 
   - [ ] **Framework Integration**
     - [ ] **PyTorch Ecosystem**
