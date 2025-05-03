@@ -2,6 +2,8 @@
 
 SAT+RL merges Reinforcement Learning techniques with traditional Boolean Satisfiability (SAT) solvers to develop an intelligent, adaptive system for solving complex SAT problems. By leveraging multi-agent systems, advanced communication protocols, and generative models, this project explores innovative approaches to enhance search efficiency, scalability, and overall problem-solving capabilities.
 
+[Implementation Plan Progress](implementation_plans.md)
+
 ## Core Concepts
 
 ### Boolean Satisfiability (SAT)
@@ -107,8 +109,6 @@ The primary objective of this research is to develop a hybrid approach that comb
 - **Anytime Algorithms**: Provide partial solutions with quality bounds during computation.
 
 ## Approaches Implemented
-
-[Implementation Plan Progress](implementation_plans.md)
 
 ### Basic Approaches
 
