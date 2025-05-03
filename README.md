@@ -21,6 +21,77 @@ Reinforcement Learning brings unique advantages to SAT solving:
 - **Adaptability**: Can fine-tune strategies for specific problem domains
 - **Exploration-exploitation balance**: Can intelligently explore the solution space
 - **Transfer learning**: Can apply knowledge from similar problems
+y
+
+### Project Visualizations
+The project now includes a comprehensive suite of visualization tools for analyzing agent behavior:
+
+#### Static Visualizations
+- **Clause-Variable Graph (S1)**: Network visualization showing the relationships between variables and clauses with color-coding to indicate satisfied/unsatisfied status
+- **Variable-Assignment Timeline (S2)**: Heatmap visualizing variable assignments (True/False/Unassigned) over time to identify patterns and thrashing behavior
+- **Reward & Clause Count Curves (T2)**: Line plots tracking performance metrics throughout episodes for reward function debugging
+
+#### Interactive Elements
+- **Filtering and Zooming**: Tools for exploring large clause-variable graphs
+- **Variable Pattern Highlighting**: Toggle switches to emphasize specific patterns in assignment timelines
+- **Time-slider Navigation**: Interactive controls for exploring specific decision points in episode traces
+
+#### Advanced Metrics
+- **Action Entropy Curve (P2)**: Metric plotting to detect premature convergence in agent policies
+- **Episode Trace Viewer (T1)**: Tabular log with symbolic interpretation for step-by-step reasoning audit
+
+## Understanding Agent Behavior Visualization
+
+The agent behavior visualization system provides multiple perspectives on agent decision-making:
+
+### Agent Trajectories in Solution Space
+
+Agent trajectories represent the exploration path through the solution space:
+
+- **X-Y Positions**: These represent an abstract 2D projection of the high-dimensional solution space:
+  - **X-axis**: Typically represents the agent's current position in solution space
+  - **Y-axis**: Often shows another dimension of the solution space or time progression
+  
+- **Movement Patterns**:
+  - **Smooth paths**: Indicate consistent decision-making with gradual optimization
+  - **Erratic movements**: Suggest exploration or backtracking behavior
+  - **Spiral patterns**: Often indicate the agent is circling around a local optimum
+  - **Straight lines**: May show deterministic behavior following a specific heuristic
+
+- **Color Coding**: Additional dimensions can be visualized through color:
+  - **Success rate**: Brightness often indicates how successful the agent is at that point
+  - **Energy level**: Color saturation can indicate the "energy" or exploration potential
+  - **Agent state**: Different colors may indicate exploring, exploiting, or backtracking states
+
+### Variable Assignment Heatmaps
+
+Variable assignment visualization shows how assignments evolve over time:
+
+- **Vertical axis**: Represents variables in the SAT problem
+- **Horizontal axis**: Represents timesteps during solving
+- **Color coding**:
+  - **White/Light**: Unassigned variables
+  - **Blue/Orange**: True/False assignments
+  - **Transition patterns**: Areas with frequent color changes indicate "thrashing" (repeatedly changing assignments)
+  - **Stable regions**: Areas with consistent color show stable assignments
+
+### Clause Satisfaction Plots
+
+These plots show how clause satisfaction evolves during solving:
+
+- **Steep increases**: Indicate breakthrough moments when many clauses become satisfied
+- **Plateaus**: Show when the agent is stuck in a local optimum
+- **Oscillations**: Indicate the agent is making trade-offs, satisfying some clauses at the expense of others
+- **Convergence**: Multiple episodes trending toward the same final satisfaction rate suggest consistent performance
+
+### Action Entropy Curves
+
+Action entropy visualizes the randomness in agent decisions:
+
+- **High entropy**: Agent is making varied, exploratory decisions
+- **Low entropy**: Agent has converged to a specific policy
+- **Decreasing entropy**: Normal pattern showing gradual convergence to a solution strategy
+- **Premature entropy drop**: May indicate the agent has converged too quickly to a suboptimal policy
 
 ## Research Overview
 
@@ -36,6 +107,8 @@ The primary objective of this research is to develop a hybrid approach that comb
 - **Anytime Algorithms**: Provide partial solutions with quality bounds during computation.
 
 ## Approaches Implemented
+
+[Implementation Plan Progress](implementation_plans.md)
 
 ### Basic Approaches
 
@@ -96,6 +169,54 @@ Provides partial results with quality bounds at any point during computation:
 - **Bound Convergence**: Gap between lower and upper bounds narrows to 0.15 within 30 seconds on average
 - **Practical Benefits**: Enables early termination with quality guarantees, providing 3-5x speedup for approximate solutions
 
+## Using the Visualization Tools
+
+To generate and explore agent behavior visualizations:
+
+1. **Run a solver experiment**:
+```python
+from utils.logging_utils import create_logger
+
+# Create a structured logger that captures data for visualization
+logger = create_logger(experiment_name="my_experiment", visualize_ready=True)
+
+# Run your solver with the logger
+# (logger will capture data during solving)
+
+# Finalize logging to save visualization data
+metadata_file = logger.finalize()
+```
+
+2. **Visualize the results using the Jupyter notebook**:
+```python
+# In the agent_behavior_visualization.ipynb notebook:
+from utils.data_processor import DataProcessor
+
+# Load data from your experiment
+processor = DataProcessor()
+processor.load_from_metadata("logs/my_experiment_viz_metadata.json")
+
+# Generate visualizations
+processor.visualize_variable_assignments()
+processor.visualize_clause_satisfaction()
+processor.visualize_agent_trajectories()
+processor.visualize_action_entropy()
+```
+
+3. **Run the entire pipeline in one step**:
+```python
+# In the agent_behavior_visualization.ipynb notebook:
+from utils.integration import run_solver_and_visualize
+
+# Run the solver and automatically generate visualizations
+processor = run_solver_and_visualize(
+    num_variables=25,
+    num_clauses=100,
+    num_episodes=3,
+    max_steps=40
+)
+```
+
 ## Project Structure
 
 ```
@@ -118,8 +239,13 @@ Provides partial results with quality bounds at any point during computation:
 ├── sat_rl_demo.py               # Demonstration of all enhanced approaches
 ├── compare.py                   # Comparison script for different agent approaches
 ├── analyze_benchmarks.py        # Analysis of solver performance and phase transition
-└── generate_architecture_diagram.py  # Creates visual representation of project components
+├── generate_architecture_diagram.py  # Creates visual representation of project components
+├── utils/                       # Utility modules
+│   ├── logging_utils.py         # Structured logging with visualization support
+│   └── data_processor.py        # Data processing for visualization
+└── agent_behavior_visualization.ipynb # Jupyter notebook for visualizing agent behavior
 ```
+
 ### Project Structure
 
 
@@ -136,8 +262,12 @@ python>=3.8
 numpy>=1.19.5
 matplotlib>=3.5.1
 seaborn>=0.11.2
+plotly>=5.5.0
+networkx>=2.6.3
+pandas>=1.3.5
 pytorch>=1.7.0
 tensorflow>=2.4.0
+jupyter>=1.0.0
 python-sat (optional, for oracle functionality)
 ```
 

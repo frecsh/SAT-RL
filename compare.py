@@ -2,10 +2,50 @@ import time
 import numpy as np
 import matplotlib.pyplot as plt
 import pickle
-from multi_q_sat import main as cooperative_main
-from multi_q_sat_comp import main as competitive_main
-from multi_q_sat_comm import main as communicative_main
+import os
+
+# Try to import the multi-agent solvers
+try:
+    from multi_q_sat import MultiQLearningSAT
+    def cooperative_main(problem):
+        # Create and run cooperative multi-agent solver
+        solver = MultiQLearningSAT(problem['num_vars'], problem['clauses'], n_agents=5)
+        solution, metrics = solver.solve(max_episodes=300, early_stopping=True)
+        return metrics
+except ImportError as e:
+    print(f"Warning: Could not import cooperative solver: {e}")
+    def cooperative_main(problem):
+        return {"solution_found": False, "runtime": 0, "episode_rewards": [], "best_reward_progress": []}
+
+try:
+    from multi_q_sat_comp import MultiQLearningSATCompetitive
+    def competitive_main(problem):
+        # Create and run competitive multi-agent solver
+        solver = MultiQLearningSATCompetitive(problem['num_vars'], problem['clauses'], n_agents=5)
+        solution, metrics = solver.solve(max_episodes=300, early_stopping=True)
+        return metrics
+except ImportError as e:
+    print(f"Warning: Could not import competitive solver: {e}")
+    def competitive_main(problem):
+        return {"solution_found": False, "runtime": 0, "episode_rewards": [], "best_reward_progress": []}
+
+try:
+    from multi_q_sat_comm import MultiQLearningSATCommunicative
+    def communicative_main(problem):
+        # Create and run communicative multi-agent solver
+        solver = MultiQLearningSATCommunicative(problem['num_vars'], problem['clauses'], n_agents=5)
+        solution, metrics = solver.solve(max_episodes=300, early_stopping=True)
+        return metrics
+except ImportError as e:
+    print(f"Warning: Could not import communicative solver: {e}")
+    def communicative_main(problem):
+        return {"solution_found": False, "runtime": 0, "episode_rewards": [], "best_reward_progress": []}
+
 from sat_problems import PROBLEM_COLLECTION
+
+# Define image directory
+IMAGES_DIR = 'images'
+os.makedirs(IMAGES_DIR, exist_ok=True)
 
 def run_comparison(problems=None, n_runs=3, include_communicative=True):
     if problems is None:
@@ -261,7 +301,7 @@ def plot_problem_results(coop_metrics, comp_metrics, problem):
     plt.legend()
     
     plt.tight_layout()
-    plt.savefig(f"results_{problem['name']}.png")
+    plt.savefig(os.path.join(IMAGES_DIR, f"results_{problem['name']}.png"))
     plt.close()
 
 def plot_problem_results_three_way(coop_metrics, comp_metrics, comm_metrics, problem):
@@ -330,7 +370,7 @@ def plot_problem_results_three_way(coop_metrics, comp_metrics, comm_metrics, pro
     plt.legend()
     
     plt.tight_layout()
-    plt.savefig(f"results_{problem['name']}_three_way.png")
+    plt.savefig(os.path.join(IMAGES_DIR, f"results_{problem['name']}_three_way.png"))
     plt.close()
 
 def plot_problem_comparison(all_results):
@@ -398,7 +438,7 @@ def plot_problem_comparison(all_results):
     plt.legend()
     
     plt.tight_layout()
-    plt.savefig("problem_comparison.png")
+    plt.savefig(os.path.join(IMAGES_DIR, "problem_comparison.png"))
     plt.close()
 
 if __name__ == "__main__":

@@ -157,6 +157,21 @@ def count_satisfied_clauses(clauses: List[List[int]], assignment: List[int]) -> 
     
     return satisfied_count
 
+def flip_variable(solution: List[int], var_idx: int) -> List[int]:
+    """
+    Flip the value of a variable in the solution.
+    
+    Args:
+        solution: List of variable assignments
+        var_idx: Index of the variable to flip
+        
+    Returns:
+        New solution with the variable flipped
+    """
+    new_solution = solution.copy()
+    new_solution[var_idx] = -new_solution[var_idx]
+    return new_solution
+
 def random_assignment(n_vars: int, seed: Optional[int] = None) -> List[int]:
     """
     Generate a random assignment for a SAT problem.
@@ -260,6 +275,45 @@ def random_walksat(clauses: List[List[int]], n_vars: int,
     
     # If we get here, we've exceeded max_flips
     return list(assignment), False
+
+# Define some test problems
+SMALL_PROBLEM = {
+    "name": "small_problem",
+    "num_vars": 10,
+    "clauses": generate_sat_problem(10, 30)
+}
+
+MEDIUM_PROBLEM = {
+    "name": "medium_problem",
+    "num_vars": 20,
+    "clauses": generate_sat_problem(20, 85)
+}
+
+LARGE_PROBLEM = {
+    "name": "large_problem",
+    "num_vars": 50,
+    "clauses": generate_sat_problem(50, 210)
+}
+
+HARD_PROBLEM = {
+    "name": "hard_problem",
+    "num_vars": 30,
+    "clauses": generate_sat_problem(30, 130)
+}
+
+EASY_PROBLEM = {
+    "name": "easy_problem",
+    "num_vars": 15,
+    "clauses": generate_sat_problem(15, 40)
+}
+
+PROBLEM_COLLECTION = [
+    SMALL_PROBLEM,
+    MEDIUM_PROBLEM,
+    LARGE_PROBLEM,
+    HARD_PROBLEM,
+    EASY_PROBLEM
+]
 
 if __name__ == "__main__":
     # Example usage

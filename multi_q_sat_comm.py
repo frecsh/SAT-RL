@@ -4,231 +4,430 @@ Multi-agent Q-learning implementation for solving SAT problems.
 This version includes communication between agents.
 """
 
+import time
 import numpy as np
 import random
-import time
-from typing import List, Tuple, Dict, Any, Optional
-from sat_problems import count_satisfied_clauses, is_satisfied
-from multi_q_sat import MultiQLearningSAT
+from collections import defaultdict, deque
+from sat_problems import count_satisfied_clauses, generate_sat_problem
 
-class MultiQLearningSATComm(MultiQLearningSAT):
-    """
-    Multi-agent Q-learning implementation with communication between agents.
-    Agents can share experiences with each other based on rewards.
-    """
+class MultiQLearningSATCommunicative:
+    """Multi-agent Q-Learning for SAT problems with communicative agents"""
     
-    def __init__(self, n_vars: int, clauses: List[List[int]], 
-                 n_agents: int = 5, learning_rate: float = 0.1, 
-                 discount_factor: float = 0.95, epsilon: float = 0.1,
-                 epsilon_decay: float = 0.995, min_epsilon: float = 0.01,
-                 comm_threshold: float = 0.5, comm_weight: float = 0.3):
-        """
-        Initialize the communicating multi-agent Q-learning SAT solver.
+    def __init__(self, num_vars, clauses, n_agents=3, learning_rate=0.1, discount_factor=0.95, 
+                 epsilon=0.2, epsilon_decay=0.99, epsilon_min=0.01, communication_freq=0.3):
+        self.num_vars = num_vars
+        self.clauses = clauses
+        self.n_agents = n_agents
+        self.learning_rate = learning_rate
+        self.discount_factor = discount_factor
+        self.epsilon = epsilon
+        self.epsilon_decay = epsilon_decay
+        self.epsilon_min = epsilon_min
+        self.communication_freq = communication_freq
         
-        Args:
-            n_vars: Number of variables in the SAT problem
-            clauses: List of clauses, where each clause is a list of literals
-            n_agents: Number of agents (default: 5)
-            learning_rate: Learning rate for Q-learning (default: 0.1)
-            discount_factor: Discount factor for future rewards (default: 0.95)
-            epsilon: Initial exploration rate (default: 0.1)
-            epsilon_decay: Rate at which epsilon decays (default: 0.995)
-            min_epsilon: Minimum exploration rate (default: 0.01)
-            comm_threshold: Reward threshold for communication (default: 0.5)
-            comm_weight: Weight of communicated Q-values (default: 0.3)
-        """
-        super().__init__(n_vars, clauses, n_agents, learning_rate, 
-                        discount_factor, epsilon, epsilon_decay, min_epsilon)
-        self.comm_threshold = comm_threshold
-        self.comm_weight = comm_weight
+        # Each agent focuses on a subset of variables
+        self.agent_var_assignments = self._assign_variables_to_agents()
         
-        # Track experiences to share
-        self.experiences = []
-    
-    def _update_q_value(self, agent_idx: int, state: List[int], action: int, reward: float, next_state: List[int]) -> None:
-        """
-        Update the Q-value for a given agent, state, and action.
+        # Q-tables for each agent (state-action value function)
+        self.q_tables = [defaultdict(lambda: np.zeros(len(agent_vars) * 2)) 
+                        for agent_vars in self.agent_var_assignments]
         
-        Args:
-            agent_idx: Index of the agent
-            state: Current state
-            action: Action taken
-            reward: Reward received
-            next_state: Next state after the action
-        """
-        # Regular Q-value update (same as parent class)
-        super()._update_q_value(agent_idx, state, action, reward, next_state)
-        
-        # If the reward is good enough, share this experience with other agents
-        if reward > self.comm_threshold:
-            self.experiences.append({
-                'agent_idx': agent_idx,
-                'state': state.copy(),
-                'action': action,
-                'reward': reward,
-                'next_state': next_state.copy()
-            })
-    
-    def _share_experiences(self) -> None:
-        """
-        Share experiences between agents.
-        """
-        if not self.experiences:
-            return
-        
-        # Sort experiences by reward (highest first)
-        self.experiences.sort(key=lambda x: x['reward'], reverse=True)
-        
-        # Share the top experiences with all agents except the originator
-        for exp in self.experiences:
-            source_agent = exp['agent_idx']
-            state = exp['state']
-            action = exp['action']
-            reward = exp['reward']
-            next_state = exp['next_state']
-            
-            # Get the Q-value from the source agent
-            source_q = self._get_q_value(source_agent, state, action)
-            
-            # Share with other agents who can perform this action
-            for agent_idx in range(self.n_agents):
-                if agent_idx != source_agent and action in self._get_available_actions(agent_idx):
-                    # Get the current Q-value for the target agent
-                    target_q = self._get_q_value(agent_idx, state, action)
-                    
-                    # Blend the Q-values based on the communication weight
-                    new_q = (1 - self.comm_weight) * target_q + self.comm_weight * source_q
-                    
-                    # Update the target agent's Q-value
-                    self._set_q_value(agent_idx, state, action, new_q)
-        
-        # Clear experiences after sharing
-        self.experiences = []
-    
-    def solve(self, max_episodes: int = 1000, early_stopping: bool = True, 
-              timeout: Optional[int] = None, comm_frequency: int = 5) -> Tuple[Optional[List[int]], Dict[str, Any]]:
-        """
-        Solve the SAT problem using multi-agent Q-learning with communication.
-        
-        Args:
-            max_episodes: Maximum number of episodes
-            early_stopping: Whether to stop early when a solution is found
-            timeout: Timeout in seconds
-            comm_frequency: Frequency of communication between agents (in episodes)
-            
-        Returns:
-            Tuple of (solution, stats) where solution is the variable assignment
-            and stats contains statistics about the solving process
-        """
-        start_time = time.time()
-        episodes_completed = 0
-        solved = False
-        timed_out = False
-        communications = 0
-        
-        # Initialize with a random assignment
-        current_state = [random.choice([var, -var]) for var in range(1, self.n_vars + 1)]
-        
-        for episode in range(max_episodes):
-            episodes_completed = episode + 1
-            
-            # Check timeout
-            if timeout and (time.time() - start_time) > timeout:
-                timed_out = True
-                break
-            
-            # Each episode starts with a random state with probability epsilon,
-            # otherwise continues from the current state
-            if random.random() < self.epsilon:
-                current_state = [random.choice([var, -var]) for var in range(1, self.n_vars + 1)]
-            
-            # Each agent takes an action in turn
-            for agent_idx in range(self.n_agents):
-                # Select action
-                action = self._select_action(agent_idx, current_state)
-                
-                # Take action
-                next_state = self._take_action(current_state, action)
-                
-                # Calculate reward
-                reward = self._get_reward(current_state, next_state)
-                
-                # Update Q-value (and potentially record experience for sharing)
-                self._update_q_value(agent_idx, current_state, action, reward, next_state)
-                
-                # Track best solution
-                self._track_best_solution(next_state)
-                
-                # Update current state
-                current_state = next_state
-                
-                # Check if problem is solved
-                if is_satisfied(self.clauses, current_state):
-                    solved = True
-                    if early_stopping:
-                        break
-            
-            # Share experiences periodically
-            if episode % comm_frequency == 0 and episode > 0:
-                self._share_experiences()
-                communications += 1
-            
-            # Decay epsilon
-            self.epsilon = max(self.min_epsilon, self.epsilon * self.epsilon_decay)
-            
-            # Early stopping if solved
-            if solved and early_stopping:
-                break
-        
-        # Final communication
-        if self.experiences:
-            self._share_experiences()
-            communications += 1
-        
-        # Prepare solution
-        solution = self.best_assignment if self.best_assignment else current_state
-        
-        # Calculate statistics
-        end_time = time.time()
-        solve_time = end_time - start_time
-        
-        stats = {
-            'solved': solved,
-            'episodes': episodes_completed,
-            'time': solve_time,
-            'best_satisfied': self.best_satisfied,
-            'best_satisfaction_ratio': self.best_satisfaction_ratio,
-            'final_epsilon': self.epsilon,
-            'timed_out': timed_out,
-            'communications': communications,
-            'comm_threshold': self.comm_threshold,
-            'comm_weight': self.comm_weight
+        # Shared knowledge base for communication
+        self.knowledge_base = {
+            "positive_vars": set(),  # Variables that should be positive
+            "negative_vars": set(),  # Variables that should be negative
+            "good_actions": {},      # State-action pairs that worked well
+            "bad_clauses": []        # Clauses that are hard to satisfy
         }
         
-        return solution, stats
-
-if __name__ == "__main__":
-    # Example usage
-    from sat_problems import generate_sat_problem
+        # Best solution found so far
+        self.best_solution = None
+        self.best_satisfied = 0
+        self.best_satisfaction_ratio = 0.0
     
-    # Generate a small SAT problem
+    def _assign_variables_to_agents(self):
+        """Assign variables to agents"""
+        agent_vars = [[] for _ in range(self.n_agents)]
+        
+        # First assign based on clauses (variables that appear together)
+        var_groups = self._group_related_variables()
+        
+        # Distribute groups among agents
+        for i, group in enumerate(var_groups):
+            agent_idx = i % self.n_agents
+            for var in group:
+                if var not in agent_vars[agent_idx]:
+                    agent_vars[agent_idx].append(var)
+        
+        # Make sure each agent has some variables (add any missing)
+        for var in range(1, self.num_vars + 1):
+            assigned = False
+            for agent_vars_list in agent_vars:
+                if var in agent_vars_list:
+                    assigned = True
+                    break
+            if not assigned:
+                # Assign to agent with fewest variables
+                agent_idx = np.argmin([len(vars_list) for vars_list in agent_vars])
+                agent_vars[agent_idx].append(var)
+        
+        return agent_vars
+    
+    def _group_related_variables(self):
+        """Group variables that appear together in clauses"""
+        # Create graph where variables in the same clause are connected
+        graph = defaultdict(set)
+        for clause in self.clauses:
+            for lit1 in clause:
+                for lit2 in clause:
+                    if lit1 != lit2:
+                        graph[abs(lit1)].add(abs(lit2))
+        
+        # Find connected components to create groups
+        visited = set()
+        groups = []
+        
+        for var in range(1, self.num_vars + 1):
+            if var in visited:
+                continue
+            
+            group = []
+            queue = [var]
+            visited.add(var)
+            
+            while queue:
+                current = queue.pop(0)
+                group.append(current)
+                
+                for neighbor in graph[current]:
+                    if neighbor not in visited:
+                        visited.add(neighbor)
+                        queue.append(neighbor)
+            
+            groups.append(group)
+        
+        return groups
+    
+    def _get_state_key(self, solution):
+        """Convert solution to a hashable state representation"""
+        # Convert solution to tuple so it can be used as a dictionary key
+        return tuple(solution)
+    
+    def _choose_actions(self, solution):
+        """Have agents select actions using epsilon-greedy policy with communication influence"""
+        actions = []
+        
+        for agent_idx, agent_vars in enumerate(self.agent_var_assignments):
+            # Skip agents that have no variables assigned
+            if len(agent_vars) == 0:
+                continue
+                
+            state_key = self._get_state_key(solution)
+            q_values = self.q_tables[agent_idx][state_key].copy()  # Copy to modify
+            
+            # Ensure q_values is not empty
+            if len(q_values) == 0:
+                # Create a default action space if none exists
+                self.q_tables[agent_idx][state_key] = np.zeros(2)  # Minimum action space
+                q_values = self.q_tables[agent_idx][state_key].copy()
+            
+            # Apply communication knowledge to adjust Q-values
+            for var_idx, var in enumerate(agent_vars):
+                # Check if knowledge base suggests this variable should be positive
+                if var in self.knowledge_base["positive_vars"]:
+                    # Increase Q-value for setting var to True
+                    if var_idx * 2 + 1 < len(q_values):
+                        q_values[var_idx * 2 + 1] += 0.2
+                
+                # Check if knowledge base suggests this variable should be negative
+                if var in self.knowledge_base["negative_vars"]:
+                    # Increase Q-value for setting var to False
+                    if var_idx * 2 < len(q_values):
+                        q_values[var_idx * 2 + 0] += 0.2
+            
+            # Check if this state-action is known to be good
+            if state_key in self.knowledge_base["good_actions"]:
+                for action in self.knowledge_base["good_actions"][state_key]:
+                    if action < len(q_values):
+                        q_values[action] += 0.3
+            
+            # Epsilon-greedy action selection with communication-adjusted Q-values
+            if np.random.rand() < self.epsilon:
+                # Random action
+                var_idx = np.random.randint(len(agent_vars))
+                flip_value = np.random.choice([0, 1])  # 0: set to false, 1: set to true
+                action = var_idx * 2 + flip_value
+            else:
+                # Greedy action using adjusted Q-values
+                action = np.argmax(q_values)
+            
+            actions.append((agent_idx, action))
+        
+        # Ensure we have at least one action
+        if not actions:
+            # If no agent had actions, create a default action
+            actions = [(0, 0)]
+            
+        return actions
+    
+    def _update_q_value(self, agent_idx, state, action, next_state, reward):
+        """Update Q-value for an agent"""
+        # Make sure the action is within bounds for this agent's Q-table
+        q_values = self.q_tables[agent_idx][state]
+        if len(q_values) == 0:
+            # Create a default action space if none exists
+            self.q_tables[agent_idx][state] = np.zeros(2)  # Minimum action space
+            q_values = self.q_tables[agent_idx][state]
+            
+        if action >= len(q_values):
+            # Handle out-of-bounds actions by clipping to valid range
+            action = len(q_values) - 1
+        
+        # Get current Q-value
+        q_current = q_values[action]
+        
+        # Get maximum Q-value for next state
+        next_q_values = self.q_tables[agent_idx][next_state]
+        if len(next_q_values) == 0:
+            # Create a default action space for next state if none exists
+            self.q_tables[agent_idx][next_state] = np.zeros(2)
+            next_q_values = self.q_tables[agent_idx][next_state]
+            
+        q_next_max = np.max(next_q_values)
+        
+        # Q-learning update rule
+        q_new = q_current + self.learning_rate * (
+            reward + self.discount_factor * q_next_max - q_current)
+        
+        # Update Q-value
+        self.q_tables[agent_idx][state][action] = q_new
+        
+        # Share this knowledge if it was valuable
+        if reward > 0.1 and np.random.rand() < self.communication_freq:
+            # Convert action to variable and value
+            agent_vars = self.agent_var_assignments[agent_idx]
+            var_idx = action // 2
+            new_value = action % 2
+            
+            if var_idx < len(agent_vars):
+                var = agent_vars[var_idx]
+                # Share this knowledge
+                if new_value == 1:
+                    self.knowledge_base["positive_vars"].add(var)
+                else:
+                    self.knowledge_base["negative_vars"].add(var)
+                
+                # Record good action
+                if state not in self.knowledge_base["good_actions"]:
+                    self.knowledge_base["good_actions"][state] = []
+                self.knowledge_base["good_actions"][state].append(action)
+    
+    def _execute_action(self, solution, agent_idx, action):
+        """Execute an action and return the new solution"""
+        new_solution = solution.copy()
+        agent_vars = self.agent_var_assignments[agent_idx]
+        
+        var_idx = action // 2
+        new_value = action % 2
+        
+        if var_idx < len(agent_vars):
+            var = agent_vars[var_idx]
+            # Set variable to True or False based on new_value
+            new_solution[var-1] = 1 if new_value == 1 else -1
+        
+        return new_solution
+    
+    def _identify_difficult_clauses(self, solution):
+        """Identify clauses that are difficult to satisfy"""
+        unsatisfied = []
+        for i, clause in enumerate(self.clauses):
+            if not any(lit * solution[abs(lit)-1] > 0 for lit in clause):
+                unsatisfied.append(i)
+        
+        # Update knowledge base with difficult clauses
+        # (focus on consistent ones)
+        for clause_idx in unsatisfied:
+            if clause_idx in self.knowledge_base["bad_clauses"]:
+                # If this clause is repeatedly unsatisfied, increase its priority
+                self.knowledge_base["bad_clauses"].append(clause_idx)
+            else:
+                self.knowledge_base["bad_clauses"].append(clause_idx)
+        
+        # Keep the list manageable
+        if len(self.knowledge_base["bad_clauses"]) > 20:
+            # Count occurrences and keep most frequent
+            clause_counts = {}
+            for idx in self.knowledge_base["bad_clauses"]:
+                clause_counts[idx] = clause_counts.get(idx, 0) + 1
+            
+            # Only keep clauses with multiple occurrences
+            self.knowledge_base["bad_clauses"] = [
+                idx for idx, count in clause_counts.items() if count > 1
+            ]
+        
+        return unsatisfied
+    
+    def _communicate(self):
+        """Agents communicate to share valuable knowledge"""
+        # Agents share knowledge about their best actions
+        # (Already implemented in _update_q_value)
+        
+        # Agents share information about difficult clauses
+        # (Already implemented in _identify_difficult_clauses)
+        pass
+    
+    def solve(self, max_episodes=1000, early_stopping=False):
+        """
+        Attempt to solve the SAT problem using communicative multi-agent Q-learning.
+        
+        Args:
+            max_episodes: Maximum number of episodes to run
+            early_stopping: Whether to stop when a satisfying assignment is found
+            
+        Returns:
+            Tuple of (best_solution, statistics dictionary)
+        """
+        start_time = time.time()
+        episode_rewards = []
+        best_reward_progress = []
+        solution_found = False
+        solution_episode = None
+        
+        for episode in range(max_episodes):
+            # Initialize random solution
+            solution = [np.random.choice([-1, 1]) for _ in range(self.num_vars)]
+            
+            # Initial satisfaction
+            satisfied = count_satisfied_clauses(self.clauses, solution)
+            initial_reward = satisfied / len(self.clauses)
+            total_reward = 0
+            
+            # Identify difficult clauses for this episode
+            difficult_clauses = self._identify_difficult_clauses(solution)
+            
+            # Each agent takes turns
+            for step in range(100):  # Limit steps per episode
+                # Communication happens with some probability
+                if np.random.rand() < self.communication_freq:
+                    self._communicate()
+                
+                # Have agents choose actions (one action per agent)
+                agent_actions = self._choose_actions(solution)
+                
+                for agent_idx, action in agent_actions:
+                    # Get current state key
+                    state_key = self._get_state_key(solution)
+                    
+                    # Execute action
+                    new_solution = self._execute_action(solution, agent_idx, action)
+                    
+                    # Calculate reward
+                    old_satisfied = count_satisfied_clauses(self.clauses, solution)
+                    new_satisfied = count_satisfied_clauses(self.clauses, new_solution)
+                    
+                    # Check if the action satisfied previously difficult clauses
+                    new_difficult_clauses = self._identify_difficult_clauses(new_solution)
+                    difficult_clauses_solved = len(set(difficult_clauses) - set(new_difficult_clauses))
+                    
+                    # Enhanced reward for solving difficult clauses
+                    reward = ((new_satisfied - old_satisfied) / len(self.clauses) + 
+                             0.2 * difficult_clauses_solved / max(1, len(difficult_clauses)))
+                    
+                    total_reward += reward
+                    
+                    # Get next state key
+                    next_state_key = self._get_state_key(new_solution)
+                    
+                    # Update Q-value (includes communication)
+                    self._update_q_value(agent_idx, state_key, action, next_state_key, reward)
+                    
+                    # Update solution
+                    solution = new_solution
+                    
+                    # Check if problem is solved
+                    if new_satisfied == len(self.clauses):
+                        self.best_solution = solution.copy()
+                        self.best_satisfied = new_satisfied
+                        self.best_satisfaction_ratio = 1.0
+                        solution_found = True
+                        solution_episode = episode
+                        break
+                
+                if solution_found and early_stopping:
+                    break
+            
+            # After each episode, update the best solution found so far
+            satisfied = count_satisfied_clauses(self.clauses, solution)
+            satisfaction_ratio = satisfied / len(self.clauses)
+            
+            if satisfied > self.best_satisfied:
+                self.best_solution = solution.copy()
+                self.best_satisfied = satisfied
+                self.best_satisfaction_ratio = satisfaction_ratio
+            
+            # Track episode rewards
+            episode_rewards.append(total_reward)
+            best_reward_progress.append(self.best_satisfaction_ratio)
+            
+            # Decay epsilon
+            if self.epsilon > self.epsilon_min:
+                self.epsilon *= self.epsilon_decay
+            
+            # Logging
+            if (episode + 1) % 10 == 0:
+                print(f"Episode {episode+1}/{max_episodes}, "
+                      f"Best satisfied: {self.best_satisfied}/{len(self.clauses)} "
+                      f"({self.best_satisfaction_ratio:.2%}), "
+                      f"Epsilon: {self.epsilon:.3f}")
+                
+                # Print knowledge base stats
+                print(f"Knowledge base: {len(self.knowledge_base['positive_vars'])} positive vars, "
+                      f"{len(self.knowledge_base['negative_vars'])} negative vars, "
+                      f"{len(self.knowledge_base['bad_clauses'])} difficult clauses")
+            
+            # Early stopping if solution found
+            if solution_found and early_stopping:
+                print(f"Solution found in episode {episode}!")
+                break
+        
+        runtime = time.time() - start_time
+        
+        # Return metrics
+        metrics = {
+            "solution_found": solution_found,
+            "solution_episode": solution_episode,
+            "runtime": runtime,
+            "episode_rewards": episode_rewards,
+            "best_reward_progress": best_reward_progress,
+            "best_satisfaction_ratio": self.best_satisfaction_ratio,
+            "knowledge_base_size": {
+                "positive_vars": len(self.knowledge_base["positive_vars"]),
+                "negative_vars": len(self.knowledge_base["negative_vars"]),
+                "good_actions": len(self.knowledge_base["good_actions"]),
+                "bad_clauses": len(self.knowledge_base["bad_clauses"])
+            }
+        }
+        
+        return self.best_solution, metrics
+
+# Demo code
+if __name__ == "__main__":
+    # Demo the communicative multi-agent SAT solver
     n_vars = 20
     n_clauses = 85
     clauses = generate_sat_problem(n_vars, n_clauses)
     
-    # Create solver with communication
-    solver = MultiQLearningSATComm(n_vars, clauses, comm_threshold=0.5, comm_weight=0.3)
+    print(f"Testing Communicative Multi-agent Q-Learning on {n_vars}-variable, {n_clauses}-clause problem")
     
-    # Solve
-    print(f"Solving {n_vars}-variable, {n_clauses}-clause SAT problem with communication...")
-    solution, stats = solver.solve(max_episodes=1000, early_stopping=True)
+    # Create and run solver
+    solver = MultiQLearningSATCommunicative(n_vars, clauses, n_agents=5)
+    solution, metrics = solver.solve(max_episodes=100, early_stopping=True)
     
-    # Print results
-    print(f"Solved: {stats['solved']}")
-    print(f"Episodes: {stats['episodes']}")
-    print(f"Time: {stats['time']:.2f} seconds")
-    print(f"Satisfaction: {stats['best_satisfied']}/{len(clauses)} clauses ({stats['best_satisfaction_ratio']:.2%})")
-    print(f"Communications: {stats['communications']}")
-    
-    if stats['solved']:
-        print(f"Solution: {solution}")
+    # Report results
+    print(f"\nResults:")
+    print(f"Solution found: {metrics['solution_found']}")
+    if metrics['solution_found']:
+        print(f"Found in episode: {metrics['solution_episode']}")
+    print(f"Runtime: {metrics['runtime']:.2f} seconds")
+    print(f"Best satisfaction ratio: {metrics['best_satisfaction_ratio']:.2%}")
+    print(f"Knowledge base size: {metrics['knowledge_base_size']}")
