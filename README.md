@@ -1,396 +1,291 @@
-# SAT+RL: Reinforcement Learning for Boolean Satisfiability Problems
+# SatRLGym: Reinforcement Learning for Boolean Satisfiability
 
-SAT+RL merges Reinforcement Learning techniques with traditional Boolean Satisfiability (SAT) solvers to develop an intelligent, adaptive system for solving complex SAT problems. By leveraging multi-agent systems, advanced communication protocols, and generative models, this project explores innovative approaches to enhance search efficiency, scalability, and overall problem-solving capabilities.
+[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-[Implementation Plan Progress](implementation_plans.md)
+SatRLGym is a Gym-compatible environment for training reinforcement learning agents on boolean satisfiability (SAT) problems. It provides a standardized interface for experimenting with RL approaches to solving SAT instances, offering tools for verification, visualization, and performance benchmarking.
 
-## Core Concepts
+## Background
 
-### Boolean Satisfiability (SAT)
-The Boolean Satisfiability Problem involves determining if there exists an assignment of true/false values to variables that makes a Boolean formula evaluate to true. SAT problems are typically expressed in Conjunctive Normal Form (CNF) - a conjunction (AND) of clauses, where each clause is a disjunction (OR) of literals.
+Boolean satisfiability (SAT) problems involve determining if there exists an assignment of boolean variables that makes a given formula evaluate to true. As the first problem proven to be NP-complete, SAT is fundamental to computational complexity theory and has applications in formal verification, planning, and circuit design.
 
-SAT is the first problem proven to be NP-complete, making it central to computational complexity theory. Most importantly, SAT problems exhibit a "phase transition" phenomenon around a clause-to-variable ratio of ~4.2, where problems suddenly become exponentially harder to solve.
+Traditional SAT solvers use hand-crafted heuristics, but reinforcement learning offers an opportunity to learn effective strategies from experience. SatRLGym provides the tools needed to explore this intersection of classical computational problems and modern machine learning techniques.
 
-### Why Combine SAT with Reinforcement Learning?
-Traditional SAT solvers use algorithms like DPLL or CDCL, which are excellent for many cases but struggle with:
+## Key Features
 
-1. **Phase transition problems**: Problems with a clause-to-variable ratio of ~4.2 are empirically the hardest
-2. **Problem-specific heuristics**: Traditional solvers don't adapt to patterns in specific problem domains
-3. **Scalability**: Performance can degrade exponentially with problem size
+- **Gymnasium-compatible Environment**: Standard RL interface for SAT problem-solving
+- **DRAT Proof Verification**: Validate UNSAT proofs with rewards for correct proofs
+- **Multiple Reward Functions**: Choose from sparse, dense, or learning-oriented rewards
+- **Oracle Integration**: Use traditional SAT solvers as oracles for guidance
+- **Visualization Tools**: Analyze agent behavior and problem structures
+- **Flexible Storage Backends**: Support for various experience storage formats
 
-Reinforcement Learning brings unique advantages to SAT solving:
-- **Learning ability**: Can discover patterns and heuristics from experience
-- **Adaptability**: Can fine-tune strategies for specific problem domains
-- **Exploration-exploitation balance**: Can intelligently explore the solution space
-- **Transfer learning**: Can apply knowledge from similar problems
+## Installation
 
-### Project Visualizations
-The project now includes a comprehensive suite of visualization tools for analyzing agent behavior:
+```bash
+# Clone the repository
+git clone https://github.com/frecsh/SatRLGym.git
+cd SatRLGym
 
-#### Static Visualizations
-- **Clause-Variable Graph (S1)**: Network visualization showing the relationships between variables and clauses with color-coding to indicate satisfied/unsatisfied status
-- **Variable-Assignment Timeline (S2)**: Heatmap visualizing variable assignments (True/False/Unassigned) over time to identify patterns and thrashing behavior
-- **Reward & Clause Count Curves (T2)**: Line plots tracking performance metrics throughout episodes for reward function debugging
+# Install locally in development mode
+pip install -e .
 
-#### Interactive Elements
-- **Filtering and Zooming**: Tools for exploring large clause-variable graphs
-- **Variable Pattern Highlighting**: Toggle switches to emphasize specific patterns in assignment timelines
-- **Time-slider Navigation**: Interactive controls for exploring specific decision points in episode traces
-
-#### Advanced Metrics
-- **Action Entropy Curve (P2)**: Metric plotting to detect premature convergence in agent policies
-- **Episode Trace Viewer (T1)**: Tabular log with symbolic interpretation for step-by-step reasoning audit
-
-## Understanding Agent Behavior Visualization
-
-The agent behavior visualization system provides multiple perspectives on agent decision-making:
-
-### Agent Trajectories in Solution Space
-
-Agent trajectories represent the exploration path through the solution space:
-
-- **X-Y Positions**: These represent an abstract 2D projection of the high-dimensional solution space:
-  - **X-axis**: Typically represents the agent's current position in solution space
-  - **Y-axis**: Often shows another dimension of the solution space or time progression
-  
-- **Movement Patterns**:
-  - **Smooth paths**: Indicate consistent decision-making with gradual optimization
-  - **Erratic movements**: Suggest exploration or backtracking behavior
-  - **Spiral patterns**: Often indicate the agent is circling around a local optimum
-  - **Straight lines**: May show deterministic behavior following a specific heuristic
-
-- **Color Coding**: Additional dimensions can be visualized through color:
-  - **Success rate**: Brightness often indicates how successful the agent is at that point
-  - **Energy level**: Color saturation can indicate the "energy" or exploration potential
-  - **Agent state**: Different colors may indicate exploring, exploiting, or backtracking states
-
-### Variable Assignment Heatmaps
-
-Variable assignment visualization shows how assignments evolve over time:
-
-- **Vertical axis**: Represents variables in the SAT problem
-- **Horizontal axis**: Represents timesteps during solving
-- **Color coding**:
-  - **White/Light**: Unassigned variables
-  - **Blue/Orange**: True/False assignments
-  - **Transition patterns**: Areas with frequent color changes indicate "thrashing" (repeatedly changing assignments)
-  - **Stable regions**: Areas with consistent color show stable assignments
-
-### Clause Satisfaction Plots
-
-These plots show how clause satisfaction evolves during solving:
-
-- **Steep increases**: Indicate breakthrough moments when many clauses become satisfied
-- **Plateaus**: Show when the agent is stuck in a local optimum
-- **Oscillations**: Indicate the agent is making trade-offs, satisfying some clauses at the expense of others
-- **Convergence**: Multiple episodes trending toward the same final satisfaction rate suggest consistent performance
-
-### Action Entropy Curves
-
-Action entropy visualizes the randomness in agent decisions:
-
-- **High entropy**: Agent is making varied, exploratory decisions
-- **Low entropy**: Agent has converged to a specific policy
-- **Decreasing entropy**: Normal pattern showing gradual convergence to a solution strategy
-- **Premature entropy drop**: May indicate the agent has converged too quickly to a suboptimal policy
-
-## Research Overview
-
-The primary objective of this research is to develop a hybrid approach that combines RL agents with SAT solvers, allowing for adaptive solution space exploration:
-
-- **Intelligent Agents**: Train agents to explore and generate candidate solutions for SAT problems.
-- **Constraint Validation**: Use SAT solvers to validate and ensure that generated solutions meet all problem constraints.
-- **Multi-Agent Collaboration**: Enable agents to share experiences and work together in different ways (cooperation, competition, communication) to optimize learning.
-- **Generative Models**: Leverage GANs to learn the distribution of satisfying assignments and generate promising candidate solutions.
-- **Function Approximation**: Use neural networks to scale beyond the limitations of tabular Q-learning for larger SAT problems.
-- **Knowledge Distillation**: Transfer knowledge from traditional SAT solvers to neural networks for more efficient learning.
-- **Curriculum Learning**: Tackle difficult problems by gradually increasing complexity, especially around the phase transition.
-- **Anytime Algorithms**: Provide partial solutions with quality bounds during computation.
-
-## Approaches Implemented
-
-### Basic Approaches
-
-- **Cooperative Agents**: Agents work together and share rewards to collectively solve SAT problems, encouraging collaboration towards a common goal.
-- **Competitive Agents**: Agents compete for rewards, introducing a dynamic where only the most successful strategies are rewarded, potentially fostering more aggressive exploration of the solution space.
-- **Communicative Agents**: Agents share their experiences and learned knowledge, improving convergence by allowing them to benefit from others' insights.
-- **Oracle-Guided Agents**: By incorporating traditional SAT solvers as oracles, agents receive targeted feedback, helping them navigate complex solution spaces more efficiently.
-- **GAN-Based Generation (SATGAN)**: Generative Adversarial Networks are trained to learn the distribution of satisfying assignments, producing promising candidate solutions even for complex problems.
-- **Progressive Training**: A multi-stage approach that gradually increases problem complexity, allowing the model to learn effectively on challenging instances.
-
-### Enhanced Approaches
-
-#### 1. Deep Q-Learning
-Deep Q-Learning replaces tabular Q-learning with neural network function approximation, enabling better scaling to larger problems:
-
-- **Neural Network Architecture**: Uses multi-layer perceptrons with 2 hidden layers (128 nodes each)
-- **Experience Replay**: Maintains a buffer of 2000 experiences for stable training
-- **State Representation**: Complete variable assignment vectors
-- **Action Space**: Flipping variables to either true or false (2*n_vars actions total)
-- **Advantages**: Memory usage remains relatively constant as problem size increases, and training time increases linearly rather than exponentially
-- **Periodic Progress Reporting**: Provides updates during long episodes
-
-#### 2. Improved GAN with Experience Replay
-Enhances GAN-based solution generation by maintaining a buffer of promising solutions:
-
-- **Generator Architecture**: Multi-layer network that transforms random noise into candidate solutions
-- **Discriminator**: Distinguishes valid solutions from invalid ones
-- **Experience Buffer**: Stores promising solutions discovered during training
-- **Training Process**: Alternates between discriminator and generator updates with periodic evaluation
-- **Benefits**: Improves GAN stability and solution quality, maintains diversity in solution candidates
-
-#### 3. Oracle Distillation
-Knowledge distillation transfers expertise from traditional SAT solvers to neural networks:
-
-- **Knowledge Sources**: Traditional SAT solvers (MiniSAT, Glucose, etc.) provide solutions
-- **Trajectory Generation**: Creates learning paths from random states to known solutions
-- **Policy Network**: Neural network trained to mimic solver behavior
-- **Refinement Process**: Iterative improvement of solutions using learned policy
-- **Effectiveness**: Models trained with distilled knowledge solve problems 70% faster than those trained from scratch
-
-#### 4. Curriculum Learning
-The curriculum learning approach tackles phase transition problems by gradually increasing difficulty:
-
-- **Staged Progression**: Begins with easy problems (ratio ~3.0) and incrementally advances to hard problems (ratio ~4.2)
-- **Knowledge Transfer**: Transfers neural network weights between difficulty levels
-- **Adaptive Step Sizing**: Automatically adjusts difficulty progression based on success rates
-- **Multi-Agent Switching**: Uses different solver strategies at different stages of the curriculum
-- **Enhanced Exploration**: Implements dynamic exploration parameters based on problem difficulty
-- **Restart Mechanisms**: Periodically reinitializes with new starting points to escape local optima
-- **Solution Diversity**: Maintains a pool of diverse promising solutions
-
-#### 5. Anytime SAT Solving
-Provides partial results with quality bounds at any point during computation:
-
-- **Solution Bounds**: Maintains lower and upper bounds on solution quality
-- **Multiple Strategies**: Combines local search, simulated annealing, and greedy approaches
-- **Ensemble Methods**: Runs multiple solver strategies in parallel
-- **Bound Convergence**: Gap between lower and upper bounds narrows to 0.15 within 30 seconds on average
-- **Practical Benefits**: Enables early termination with quality guarantees, providing 3-5x speedup for approximate solutions
-
-## Using the Visualization Tools
-
-To generate and explore agent behavior visualizations:
-
-1. **Run a solver experiment**:
-```python
-from utils.logging_utils import create_logger
-
-# Create a structured logger that captures data for visualization
-logger = create_logger(experiment_name="my_experiment", visualize_ready=True)
-
-# Run your solver with the logger
-# (logger will capture data during solving)
-
-# Finalize logging to save visualization data
-metadata_file = logger.finalize()
+# Install with optional dependencies
+pip install -e ".[torch,solvers,proof]"
 ```
 
-2. **Visualize the results using the Jupyter notebook**:
+## Quick Start
+
 ```python
-# In the agent_behavior_visualization.ipynb notebook:
-from utils.data_processor import DataProcessor
+import gymnasium as gym
+import satrlgym
 
-# Load data from your experiment
-processor = DataProcessor()
-processor.load_from_metadata("logs/my_experiment_viz_metadata.json")
+# Create a SAT environment
+env = gym.make("SatRLGym-v0", cnf_file="path/to/problem.cnf")
+obs, info = env.reset(seed=42)
 
-# Generate visualizations
-processor.visualize_variable_assignments()
-processor.visualize_clause_satisfaction()
-processor.visualize_agent_trajectories()
-processor.visualize_action_entropy()
+# Run a random agent
+done = False
+while not done:
+    action = env.action_space.sample()  # Replace with your agent
+    obs, reward, terminated, truncated, info = env.step(action)
+    done = terminated or truncated
+    if done:
+        print(f"Problem solved: {info['solved']}")
 ```
 
-3. **Run the entire pipeline in one step**:
-```python
-# In the agent_behavior_visualization.ipynb notebook:
-from utils.integration import run_solver_and_visualize
+## Environment Representation
 
-# Run the solver and automatically generate visualizations
-processor = run_solver_and_visualize(
-    num_variables=25,
-    num_clauses=100,
-    num_episodes=3,
-    max_steps=40
-)
+### Observation Space
+
+The default environment provides observations as dictionaries containing:
+
+- `variables`: Array representing current variable assignments (-1.0 for false, 1.0 for true, 0 for unassigned)
+- `clauses`: Array indicating which clauses are currently satisfied
+- `variable_assignment`: Dictionary mapping variable indices to boolean values
+- `clause_satisfaction`: Boolean array indicating which clauses are satisfied
+
+### Action Space
+
+Actions are integer indices corresponding to variables to flip (0-indexed, with the environment converting to 1-indexed variables internally).
+
+## Reward Functions
+
+SatRLGym provides several reward function modes:
+
+- **Sparse**: Reward only on problem solution (+1 for solving, 0 otherwise)
+- **Dense**: Incremental rewards based on clause satisfaction changes
+- **Learning**: Shaped rewards that balance exploration and exploitation
+
+Example of selecting a reward mode:
+
+```python
+# Create environment with dense rewards
+env = gym.make("SatRLGym-v0", cnf_file="problem.cnf", reward_mode="dense")
+```
+
+## Supported Environments
+
+SatRLGym provides several environment configurations:
+
+| Environment          | Description                                         |
+| -------------------- | --------------------------------------------------- |
+| `SatRLGym-v0`        | Core environment with variable flipping actions     |
+| `SatRLGym-Guided-v0` | Environment with CDCL oracle guidance               |
+| `SatRLGym-UNSAT-v0`  | Environment with rewards for UNSAT proof generation |
+
+## Oracle Guidance
+
+SatRLGym includes an oracle system that allows integration with traditional SAT solving heuristics:
+
+- **What are Oracles?**: Components that provide expert guidance for variable selection and evaluation
+- **Types of Oracles**:
+  - Simple DPLL Oracle: Implements core DPLL algorithm heuristics
+  - External Solver Oracle: Wraps external SAT solvers like MiniSAT
+
+### Oracle Integration Example
+
+```python
+from satrlgym.oracles import SimpleDPLLOracle
+
+# Create environment and oracle
+env = gym.make("SatRLGym-v0", cnf_file="problem.cnf")
+oracle = SimpleDPLLOracle(env.clauses, env.num_vars)
+
+# Use oracle for guidance
+obs, _ = env.reset()
+query = {"assignment": obs["variable_assignment"]}
+guidance = oracle.query(query)
+
+# Select action based on oracle suggestion
+if "suggested_assignments" in guidance:
+    var_idx = list(guidance["suggested_assignments"].keys())[0]
+    action = int(var_idx) - 1
+else:
+    action = env.action_space.sample()
+```
+
+## Implementing Custom Agents
+
+Here's a simple example of implementing a greedy agent that prioritizes variables appearing in the most unsatisfied clauses:
+
+```python
+class GreedySATAgent:
+    def __init__(self, env):
+        self.env = env
+
+    def choose_action(self, observation):
+        # Count variable occurrences in unsatisfied clauses
+        var_counts = defaultdict(int)
+        clauses = observation["clauses"]
+
+        for i, satisfied in enumerate(observation["clause_satisfaction"]):
+            if not satisfied:
+                for literal in self.env.clauses[i]:
+                    var_counts[abs(literal)] += 1
+
+        # Select variable with highest occurrence count
+        if var_counts:
+            best_var = max(var_counts.items(), key=lambda x: x[1])[0]
+            # Convert to 0-indexed action
+            return best_var - 1
+        else:
+            return self.env.action_space.sample()
+```
+
+## Proof Verification
+
+SatRLGym includes DRAT proof verification for unsatisfiable instances:
+
+```python
+from satrlgym.proofs.verification import ProofVerificationManager
+
+# Verify a DRAT proof
+verifier = ProofVerificationManager()
+cnf = "p cnf 1 2\n1 0\n-1 0\n"  # Simple UNSAT formula
+proof = "d 1 0\n"  # DRAT proof
+valid = verifier.verify_solution(cnf, proof)
+```
+
+## Environment Integration
+
+Use proof verification within your environment for enhanced rewards:
+
+```python
+from satrlgym.proofs.verification import ProofVerificationManager
+
+# In your environment wrapper
+verifier = ProofVerificationManager()
+if verifier.is_available():
+    if verifier.verify_solution(cnf_formula, agent_proof):
+        reward += 10  # Bonus reward for correct proof
+    else:
+        reward -= 5   # Penalty for invalid proof
+```
+
+## Visualization Tools
+
+SatRLGym includes tools for visualizing agent behavior:
+
+```python
+from satrlgym.visualization import DataVisualizer
+
+visualizer = DataVisualizer(experiment_path="path/to/experiment")
+visualizer.plot_clause_satisfaction()
+visualizer.plot_variable_assignments()
+visualizer.plot_reward_curve()
+```
+
+## Using Standard Benchmarks
+
+SatRLGym supports standard DIMACS CNF benchmark files:
+
+```python
+# Using a standard benchmark from SATLIB
+env = gym.make("SatRLGym-v0", cnf_file="benchmarks/uf50-01.cnf")
+
+# Or directly from DIMACS string
+dimacs_string = """
+p cnf 3 3
+1 2 0
+-1 3 0
+-2 -3 0
+"""
+from satrlgym.utils import parse_dimacs
+formula = parse_dimacs(dimacs_string)
+env = gym.make("SatRLGym-v0", formula=formula)
+```
+
+Common benchmark sources:
+
+- [SATLIB](https://www.cs.ubc.ca/~hoos/SATLIB/benchm.html)
+- [SAT Competition](http://www.satcompetition.org/)
+
+## Performance Benchmarking
+
+```bash
+# Benchmark storage backends
+python scripts/benchmark_cli.py run --backends npz hdf5 parquet
+
+# Benchmark solver performance
+python scripts/benchmark_solvers.py --time_limit 60
 ```
 
 ## Project Structure
 
 ```
-.
-├── pyproject.toml               # Project configuration and dependencies
-├── README.md                    # Project documentation
-├── implementation_plans.md      # Implementation plan progress
-├── sat_rl_architecture.png      # Architecture diagram
-├── src/                         # Source code directory
-│   ├── main.py                  # Core SAT environment
-│   ├── sat_problems.py          # Library of SAT problem definitions
-│   ├── agents/                  # Agent implementations
-│   │   ├── multi_q_sat.py       # Cooperative Q-learning implementation
-│   │   ├── multi_q_sat_comp.py  # Competitive Q-learning implementation
-│   │   ├── multi_q_sat_comm.py  # Communicative Q-learning implementation
-│   │   ├── multi_q_sat_oracle.py  # Oracle-guided Q-learning implementation
-│   │   ├── deep_q_sat_agent.py  # Deep Q-Learning with neural network function approximation
-│   │   ├── oracle_distillation_agent.py  # Knowledge distillation from SAT oracles
-│   │   ├── curriculum_sat_learner.py  # Curriculum learning to tackle phase transition
-│   │   └── anytime_sat_solver.py  # Anytime SAT solving with solution quality bounds
-│   ├── models/                  # Model implementations
-│   │   ├── sat_gan.py           # GAN-based generator for SAT variable assignments
-│   │   ├── progressive_sat_gan.py  # Progressive training for SAT-GAN models
-│   │   ├── improved_sat_gan.py  # Enhanced GAN with experience replay buffer
-│   │   └── multi_q_sat_gan_improved.py  # GAN-enhanced Q-learning implementation
-│   ├── oracles/                 # Oracle implementations
-│   │   └── sat_oracle.py        # Traditional SAT solver oracle
-│   └── utils/                   # Utility modules
-│       ├── logging_utils.py     # Structured logging with visualization support
-│       └── data_processor.py    # Data processing for visualization
-├── scripts/                     # Scripts for running experiments
-│   ├── sat_rl_demo.py           # Demonstration of all enhanced approaches
-│   ├── compare.py               # Comparison script for different agent approaches
-│   ├── analyze_benchmarks.py    # Analysis of solver performance and phase transition
-│   └── generate_architecture_diagram.py  # Creates visual representation of project components
-├── notebooks/                   # Jupyter notebooks
-│   └── agent_behavior_visualization.ipynb  # Notebook for visualizing agent behavior
-└── tests/                       # Test directory
-    └── test_sat_solver.py       # Tests for SAT solver components
+src/satrlgym/
+├── __init__.py               # Package initialization and registration
+├── envs/                     # Environment implementations
+│   ├── core.py               # Core environment classes
+│   └── rewards.py            # Reward function implementations
+├── oracles/                  # Oracle implementations for guidance
+│   ├── base_oracle.py        # Abstract oracle base class
+│   └── sat_oracle.py         # SAT solver oracle implementation
+├── proofs/                   # Proof verification components
+│   ├── drat.py               # DRAT proof checker implementation
+│   └── verification.py       # Verification management utilities
+├── utils/                    # Utility functions and tools
+├── visualization/            # Visualization components
+└── experience/               # Experience storage backends
 ```
 
-![Architecture of the SAT+RL Project](sat_rl_architecture.png)
+## Troubleshooting
 
-## Getting Started
+### Common Issues
 
-### Prerequisites
+- **ImportError: No module named 'drat-trim'**: The proof verification dependencies are missing. Install with `pip install -e ".[proof]"`.
+- **Oracle returns empty guidance**: Ensure you're using the correct query format - some oracles expect OracleQuery objects rather than dictionaries.
+- **Memory errors with large formulas**: Try using the memory-mapped storage backend for large problems.
 
+For more help, check the full documentation or open an issue in the GitHub repository.
+
+## Documentation
+
+For detailed documentation, see the [`docs`](docs) directory:
+
+- Installation Guide
+- Environment API
+- Oracle Integration
+- Proof Verification
+
+## Contributing
+
+We welcome contributions! Please see CONTRIBUTING.md for guidelines.
+
+## Citation
+
+If you use SatRLGym in your research, please cite:
+
+```bibtex
+@software{satrlgym2025,
+  title = {SatRLGym: Reinforcement Learning for Boolean Satisfiability Problems},
+  author = {SAT+RL Project Contributors},
+  year = {2025},
+  url = {https://github.com/frecsh/SatRLGym}
+}
 ```
-python>=3.8
-numpy>=1.19.5
-matplotlib>=3.5.1
-seaborn>=0.11.2
-plotly>=5.5.0
-networkx>=2.6.3
-pandas>=1.3.5
-pytorch>=1.7.0
-tensorflow>=2.4.0
-jupyter>=1.0.0
-python-sat (optional, for oracle functionality)
-```
-
-### Installation
-
-You can install the project in several ways:
-
-```bash
-# Install using pip with requirements.txt
-pip install -r requirements.txt
-
-# Or install using pyproject.toml (recommended)
-pip install -e .
-
-# Install with development dependencies
-pip install -e ".[dev]"
-
-# Install with visualization dependencies
-pip install -e ".[visualization]"
-```
-
-### Running Experiments
-
-```bash
-# Generate architecture diagram
-python generate_architecture_diagram.py
-
-# Try all enhanced approaches
-python sat_rl_demo.py
-
-# Run specific enhanced approach
-python sat_rl_demo.py --method dqn
-python sat_rl_demo.py --method gan
-python sat_rl_demo.py --method curriculum
-python sat_rl_demo.py --method oracle
-python sat_rl_demo.py --method anytime --time_limit 60
-python sat_rl_demo.py --method ensemble --time_limit 120
-
-# Compare different approaches
-python compare.py
-```
-
-## Technical Approach
-
-### Deep Q-Learning Implementation
-
-Our function approximation approach incorporates:
-- **Neural network architecture**: Multi-layer perceptron with 2 hidden layers (128 nodes each)
-- **Experience replay**: Buffer of 2000 experiences with mini-batch training
-- **Target networks**: Separate networks for stable learning targets
-- **Action encoding**: Binary representation of variable assignments
-- **State representation**: Complete assignment vector
-- **Training schedule**: Adaptive based on performance plateaus
-- **Progress Monitoring**: Periodic updates during long episodes
-
-### Curriculum Learning in Detail
-
-Our curriculum approach features:
-
-#### 1. Staged Difficulty Progression
-- **Starting point**: Begins with ratio 3.0 (many solutions, easier to solve)
-- **Increments**: Increases by 0.1-0.2 in clause-to-variable ratio
-- **Conditional advancement**: Only progresses after demonstrating success
-- **Target**: Gradually reaches the phase transition difficulty (ratio ~4.2)
-
-#### 2. Knowledge Transfer Mechanisms
-- **Neural network weight transfer**: Initializes networks for harder problems using weights from easier ones
-- **Solution pattern extraction**: Identifies stable variable assignments across solutions
-- **Memory replay buffer transfer**: Selectively preserves valuable experiences
-- **Blended weight transfer**: Applies different transfer rates for different network layers
-
-#### 3. Adaptive Step Sizing
-- **Success-based progression**: Advances difficulty only after achieving target success rate
-- **Automatic step size reduction**: Reduces increments when agents struggle
-- **Plateau detection**: Triggers interventions when progress stalls
-- **Dynamic difficulty adjustment**: Can temporarily decrease difficulty to consolidate learning
-
-#### 4. Enhanced Exploration Strategies
-- **Dynamic epsilon scheduling**: Adjusts exploration parameters based on problem difficulty
-- **Restart mechanisms**: Periodically resets with new initializations to escape local optima
-- **Solution diversity pool**: Maintains diverse promising solutions for better exploration
-- **Temperature annealing**: Gradually shifts from exploration to exploitation
-
-#### 5. Intelligent Agent Switching
-- **Difficulty-based selection**: Uses different agent types based on problem characteristics
-- **Performance-based switching**: Changes strategies after failed attempts
-- **Ensemble approaches**: Combines multiple strategies for harder problems
-- **Adaptive learning rates**: Adjusts learning parameters based on curriculum stage
-
-### Anytime SAT Solving
-
-Our anytime algorithms provide:
-- **Solution bounds**: Lower and upper bounds on solution quality
-- **Incremental improvements**: Continuous refinement of solution quality
-- **Bound convergence**: Gradually narrowing gap between bounds
-- **Early termination**: Stopping criteria based on bound gap
-- **Ensemble methods**: Multiple solution strategies running in parallel
-- **Adaptive resource allocation**: Shifting computational resources to promising methods
-
-## Current Work
-
-- **GAN Stability Improvements**: Implementing techniques to prevent numerical instability during training, such as gradient clipping, spectral normalization, and adaptive batch sizes.
-- **Curriculum Learning Enhancements**: Improving exploration strategies, knowledge transfer, and agent switching mechanisms.
-- **Hybrid RL-GAN Approaches**: Combining the strengths of reinforcement learning exploration with GAN-based candidate generation.
-- **Function Approximation Scaling**: Improving neural network architectures to handle even larger SAT problems.
-- **Phase Transition Analysis**: In-depth study of solver behavior around the critical threshold.
-- **Ensemble Method Optimization**: Finding optimal combinations of solver strategies for different problem types.
-
-## Future Work
-
-- **Advanced Reward Functions**: Exploring reward structures that balance exploration with exploitation, crucial for large and dynamic solution spaces.
-- **Larger-Scale Problems**: Scaling this approach to work on larger, more complex SAT problems, particularly those near the phase transition zone (where traditional solvers struggle).
-- **Cross-Domain Applications**: Applying our methods to other constraint satisfaction problems in fields like bioinformatics, energy systems, and automated decision-making.
-- **Transformer-Based Extensions**: Investigating transformer architectures for improved solution generation and pattern recognition.
-- **Distributed Learning**: Implementing distributed training across multiple machines for very large problems.
-- **Neurosymbolic Integration**: Combining neural approaches with symbolic reasoning for enhanced performance.
 
 ## License
 
-MIT
+MIT License

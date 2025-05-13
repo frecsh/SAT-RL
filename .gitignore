@@ -36,6 +36,7 @@ var/
 glucose-4.2.1/
 debug_satgan.py
 update_environment.sh
+storage_unification_plan.md
 
 # Experiment data and outputs
 logs/
@@ -56,6 +57,15 @@ images/
 # Project utility scripts (temporary)
 fix_imports.py
 organize_project.py
+
+# Uneeded Folders
+results/
+results_*
+old-possible-trash/
+tests/
+test_functionality.py
+test_*.py
+test_*
 
 # Testing
 .coverage
