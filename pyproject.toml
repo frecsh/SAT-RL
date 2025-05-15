@@ -2,8 +2,25 @@
 build-backend = "poetry.core.masonry.api"
 requires = ["poetry-core>=1.3.0"]
 
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+check_untyped_defs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+exclude = [".git", "__pycache__", "build", "dist"]
+
 [project]
-authors = [{name = "SAT+RL Project Contributors"}]
+authors = [
+  {name = "Symbolic Reasoning Project Contributors"}
+]
 classifiers = [
   "License :: OSI Approved :: MIT License",
   "Programming Language :: Python :: 3",
@@ -22,42 +39,52 @@ dependencies = [
   "matplotlib>=3.5,<4.0",
   "networkx>=2.6,<3.0",
   "numpy>=1.21,<2.0",
-  "ollama (>=0.4.8,<0.5.0)",
+  "ollama>=0.4.8,<0.5.0",
   "pandas>=2.1.1,<3.0",
   "pkgutil-resolve-name>=1.3.10,<2.0.0",
   "pyarrow>=8.0,<12.0",
-  "pydantic (>=2.11.4,<3.0.0)",
+  "pydantic>=2.11.4,<3.0.0",
   "scikit-learn>=1.6,<2.0",
   "seaborn>=0.11,<0.13",
   "tqdm>=4.64,<5.0",
   "wandb>=0.19.11,<0.20.0",
-  "zstandard (>=0.23.0,<0.24.0)",
-  "zstd (>=1.5.7.0,<2.0.0.0)"
+  "zstandard>=0.23.0,<0.24.0",
+  "zstd>=1.5.7.0,<2.0.0.0",
+  "sympy>=1.14.0,<2.0.0",
+  "umap-learn>=0.5.7,<0.6.0",
+  "z3-solver (>=4.15.0.0,<5.0.0.0)",
+  "ml-dtypes (>=0.3.1,<0.4.0)"
 ]
-description = "Gymnasium environment for SAT problems with RL hooks"
+description = "Gymnasium environment for symbolic reasoning domains with RL hooks"
 license = {text = "MIT"}
-name = "satrlgym"
+name = "symbolicgym"
 readme = "README.md"
 requires-python = ">=3.10,<3.12"
 version = "0.1.0"
 
 [project.optional-dependencies]
+sympy = [
+    "sympy>=1.12",
+    "symengine>=0.9.2"
+]
+z3 = [
+    "z3-solver>=4.12.2.0"
+]
 dev = [
+  "pytest>=8.0.0",
+  "pytest-cov>=4.1.0",
+  "mypy>=1.8.0",
+  "ruff>=0.2.0",
   "black>=22.1.0",
   "flake8>=4.0.1",
-  "isort>=5.10.1",
-  "mypy>=0.931",
-  "pytest-cov>=2.12.0",
-  "pytest>=6.0"
+  "isort>=5.10.1"
 ]
 ml = [
-  "tensorflow>=2.15,<3.0", # For TensorFlow-based ML
-  "torch>=1.10,<2.0" # For PyTorch-based ML
-]
-proof = [
+  "tensorflow>=2.15,<3.0",
+  "torch>=1.10,<2.0"
 ]
 solvers = [
-  "python-sat>=0.1.7.dev3" # For PySAT integration
+  "python-sat>=0.1.7.dev3"
 ]
 visualization = [
   "jupyterlab>=3.0.0",
@@ -65,8 +92,17 @@ visualization = [
 ]
 
 [project.urls]
-"Bug Tracker" = "https://github.com/frecsh/SatRLGym/issues"
-"Homepage" = "https://github.com/frecsh/SatRLGym"
+"Bug Tracker" = "https://github.com/frecsh/SymbolicGym/issues"
+"Homepage" = "https://github.com/frecsh/SymbolicGym"
 
 [tool.poetry.scripts]
-satrlgym = "satrlgym.__main__:main"
+symbolicgym = "symbolicgym.__main__:main"
+
+[tool.ruff]
+select = ["E", "F", "B", "I"]
+line-length = 100
+target-version = "py310"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+extend-select = ["E501"]

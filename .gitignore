@@ -37,6 +37,9 @@ glucose-4.2.1/
 debug_satgan.py
 update_environment.sh
 storage_unification_plan.md
+diagnose-hooks.sh
+debug-pre-commit-config.yaml
+cleanup.sh
 
 # Experiment data and outputs
 logs/
@@ -66,6 +69,8 @@ tests/
 test_functionality.py
 test_*.py
 test_*
+tmp_grpo.pt
+tmp_moe.pt
 
 # Testing
 .coverage
@@ -97,6 +102,7 @@ docs/generated/
 doc/_build/
 doc/generated/
 
+
 # OS specific files
 .DS_Store
 .DS_Store?
@@ -118,3 +124,6 @@ Thumbs.db
 .mypy_cache/
 .pytest_cache/
 .ruff_cache/
+
+# Documents
+docs/local-no-push/

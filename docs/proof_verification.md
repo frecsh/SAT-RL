@@ -1,6 +1,6 @@
-# Proof Verification in SatRLGym
+# Proof Verification in SymbolicGym
 
-SatRLGym includes functionality for verifying proofs of unsatisfiability using the DRAT-trim proof checker.
+SymbolicGym includes functionality for verifying proofs of unsatisfiability using the DRAT-trim proof checker.
 
 ## Requirements
 
@@ -10,8 +10,8 @@ SatRLGym includes functionality for verifying proofs of unsatisfiability using t
 ## Basic Usage
 
 ```python
-import satrlgym
-from satrlgym.proofs.drat import DRATVerifier
+import symbolicgym  # TODO: Update to actual import if available
+from symbolicgym.proofs.drat import DRATVerifier  # TODO: Update to actual import if available
 
 # Initialize the verifier
 verifier = DRATVerifier()
@@ -32,7 +32,7 @@ print(f"Proof valid: {is_valid}")
 The proof verification can be used within environments to validate agent solutions:
 
 ```python
-from satrlgym.proofs.verification import ProofVerificationManager
+from symbolicgym.proofs.verification import ProofVerificationManager  # TODO: Update to actual import if available
 
 # In your environment
 verifier = ProofVerificationManager()
@@ -59,9 +59,9 @@ DRAT-trim is a tool developed by Marijn Heule at the University of Texas at Aust
 2. Can trim DRAT proofs to remove unnecessary steps
 3. Can produce optimized proofs
 
-### Integration with SatRLGym
+### Integration with SymbolicGym
 
-SatRLGym includes:
+SymbolicGym includes:
 
 1. A Python wrapper around the DRAT-trim binary
 2. Automatic compilation of the C code
@@ -73,6 +73,9 @@ SatRLGym includes:
 The verification system includes robust error handling:
 
 ```python
+import symbolicgym  # TODO: Update to actual import if available
+from symbolicgym.proofs.drat import DRATVerifier  # TODO: Update to actual import if available
+
 try:
     verifier = DRATVerifier()
     result = verifier.verify(cnf, proof)
@@ -87,7 +90,7 @@ except RuntimeError as e:
 ### Customizing Compilation
 
 ```python
-from satrlgym.proofs.drat import DRATVerifier
+from symbolicgym.proofs.drat import DRATVerifier  # TODO: Update to actual import if available
 
 verifier = DRATVerifier(
     source_path="/path/to/custom/drat-trim.c",
@@ -100,6 +103,8 @@ verifier = DRATVerifier(
 
 ```python
 # Verify using file paths
+from symbolicgym.proofs.drat import DRATVerifier  # TODO: Update to actual import if available
+
 verifier = DRATVerifier()
 result = verifier.verify("path/to/formula.cnf", "path/to/proof.drat")
 ```
@@ -108,7 +113,7 @@ result = verifier.verify("path/to/formula.cnf", "path/to/proof.drat")
 
 ```python
 # Example in a training loop
-from satrlgym.proofs.verification import ProofVerificationManager
+from symbolicgym.proofs.verification import ProofVerificationManager  # TODO: Update to actual import if available
 
 verifier = ProofVerificationManager()
 

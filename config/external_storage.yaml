@@ -1,0 +1,2 @@
+# Config for external drive data pipeline
+external_data_path: /mnt/external_drive/symbolicgym_data

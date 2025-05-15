@@ -1,31 +1,66 @@
-# SatRLGym: Reinforcement Learning for Boolean Satisfiability
+# SymbolicGym: A Unified RL Platform for Symbolic Reasoning
 
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![CI](https://github.com/frecsh/SymbolicGym/actions/workflows/ci.yml/badge.svg)](https://github.com/frecsh/SymbolicGym/actions/workflows/ci.yml)
+[![codecov](https://åo/gh/frecsh/SymbolicGym/branch/main/graph/badge.svg)](https://codecov.io/gh/frecsh/SymbolicGym)
 
-SatRLGym is a Gym-compatible environment for training reinforcement learning agents on boolean satisfiability (SAT) problems. It provides a standardized interface for experimenting with RL approaches to solving SAT instances, offering tools for verification, visualization, and performance benchmarking.
+SymbolicGym is a general-purpose, extensible Gym-compatible platform for reinforcement learning on symbolic reasoning tasks. It supports SAT, SymPy, and Z3 domains, with rich latent-space feedback, cross-domain learning, interpretability tooling, and robust risk mitigation. All major roadmap features are implemented, tested, and verified.
+
+## Architecture Overview
+
+![SymbolicGym Architecture](docs/architecture_diagram.svg)
+
+The diagram above illustrates how the core environment, symbolic domains (SAT, SymPy, Z3), domain registry, feedback and representation layers, agents (DQN, PPO, GNN, CTDE, GRPO, MoE, Imitation), and interpretability/visualization tools interact within SymbolicGym.
+
+## Key Contributions
+
+- **Unified RL platform for SAT, SymPy, and Z3 symbolic domains**
+- **Multi-dimensional latent feedback and graph-based state representations**
+- **Cross-domain curriculum learning and shared encoder for generalization**
+- **Interpretability dashboard, latent projector, and feedback interpreter**
+- **Risk mitigation: oracle imitation, VecEnv, distributed runner, external storage**
+- **Extensible domain registry and integration template for new domains**
+
+## Research Goals
+
+- Investigate generalization and transfer learning across symbolic domains
+- Develop interpretable RL agents for symbolic reasoning
+- Reduce sample complexity and improve robustness via curriculum and oracles
+- Enable scalable, reproducible experiments in symbolic RL
+
+## Related Publications
+
+- See `docs/research_questions.md` for open research questions.
 
 ## Background
 
-Boolean satisfiability (SAT) problems involve determining if there exists an assignment of boolean variables that makes a given formula evaluate to true. As the first problem proven to be NP-complete, SAT is fundamental to computational complexity theory and has applications in formal verification, planning, and circuit design.
+Symbolic reasoning tasks—such as SAT solving, symbolic algebra, and SMT solving—are foundational in computer science, mathematics, and AI. SymbolicGym enables RL agents to interact with and learn from these domains using both scalar and high-dimensional feedback, supporting research in generalization, transfer, interpretability, and robust evaluation.
 
-Traditional SAT solvers use hand-crafted heuristics, but reinforcement learning offers an opportunity to learn effective strategies from experience. SatRLGym provides the tools needed to explore this intersection of classical computational problems and modern machine learning techniques.
+## Supported Domains
 
-## Key Features
+- **SAT**: Boolean satisfiability (phase transition, industrial, crafted problems)
+- **SymPy**: Symbolic algebra (simplification, factoring, equation solving)
+- **Z3**: Satisfiability Modulo Theories (SMT) tasks
 
-- **Gymnasium-compatible Environment**: Standard RL interface for SAT problem-solving
-- **DRAT Proof Verification**: Validate UNSAT proofs with rewards for correct proofs
-- **Multiple Reward Functions**: Choose from sparse, dense, or learning-oriented rewards
-- **Oracle Integration**: Use traditional SAT solvers as oracles for guidance
-- **Visualization Tools**: Analyze agent behavior and problem structures
-- **Flexible Storage Backends**: Support for various experience storage formats
+## Features
+
+- **Pluggable symbolic-feedback backends** for easy domain extension (see `docs/domain_integration.md`)
+- **Latent-space feedback**: Multi-dimensional signals for richer learning
+- **Graph and matrix state representations** for advanced agents
+- **Multi-agent and CTDE support**: Centralized training, decentralized execution
+- **Curriculum learning**: Domain-agnostic and per-domain curricula
+- **Oracle and proof integration**: Use traditional solvers and proof checkers as oracles
+- **Visualization and interpretability tools**: Clause attention, feedback vector analysis, dashboard, latent projector
+- **Risk mitigation**: Oracle imitation pre-training, shared encoder, VecEnv, distributed runner, external storage
+- **Extensible domain registry**: Add new domains with minimal boilerplate
 
 ## Installation
 
 ```bash
 # Clone the repository
-git clone https://github.com/frecsh/SatRLGym.git
-cd SatRLGym
+git clone https://github.com/frecsh/SymbolicGym.git
+cd SymbolicGym
 
 # Install locally in development mode
 pip install -e .
@@ -38,10 +73,15 @@ pip install -e ".[torch,solvers,proof]"
 
 ```python
 import gymnasium as gym
-import satrlgym
+import symbolicgym
 
 # Create a SAT environment
-env = gym.make("SatRLGym-v0", cnf_file="path/to/problem.cnf")
+# You can specify either a CNF file (using 'cnf_file'), or directly provide a formula dict (using 'formula').
+# 'cnf_file' is a convenience option that loads and parses the file into a formula dict internally.
+env = gym.make("SymbolicGym-v0", cnf_file="path/to/problem.cnf")
+# Equivalent usage with a formula dict:
+# formula = {"clauses": [[1, 2], [-1, -2], [1, -2], [-1, 2]], "num_vars": 2}
+# env = gym.make("SymbolicGym-v0", formula=formula)
 obs, info = env.reset(seed=42)
 
 # Run a random agent
@@ -54,13 +94,46 @@ while not done:
         print(f"Problem solved: {info['solved']}")
 ```
 
+For more detailed agent and usage examples, see the 'examples/' directory in the repository. This includes DQN agents, custom agent implementations, environment enhancements, and interpretability tools.
+
+For additional code samples and advanced usage, refer to the 'examples/' directory and the 'notebooks/' folder for interactive guides.
+
+## Results and Benchmarks
+
+See the `results/` directory for sample learning curves, cross-domain transfer plots, ablation tables, and a summary of key findings. Performance benchmarking scripts and profiling tools are provided for large-scale and distributed runs.
+
+## Reproducibility
+
+- Ready-to-run experiment scripts: see `scripts/train_sat_dqn.py` and `scripts/train_crossdomain_gnn.py`.
+- All experiments are seedable and config-driven for reproducibility.
+- See the `tests/` directory for expanded test coverage, including cross-domain and performance tests.
+
+## Quickstart Notebook
+
+A quickstart notebook is available in `notebooks/Quickstart.ipynb` for new users. It demonstrates installation, environment setup, running agents, and visualization tools for SAT, SymPy, and Z3 domains.
+
+### Using with Problem Generators
+
+You can also generate random SAT problems for training:
+
+```python
+from symbolicgym.utils.generators import generate_random_ksat
+
+# Generate a random 3-SAT formula with 20 variables and 85 clauses
+formula = generate_random_ksat(n_vars=20, n_clauses=85, k=3, seed=42)
+env = gym.make("SymbolicGym-v0", formula=formula)
+
+# Or generate a formula with a specific clause-to-variable ratio
+formula = generate_random_ksat(n_vars=100, clause_ratio=4.2, k=3, seed=42)
+```
+
 ## Environment Representation
 
 ### Observation Space
 
 The default environment provides observations as dictionaries containing:
 
-- `variables`: Array representing current variable assignments (-1.0 for false, 1.0 for true, 0 for unassigned)
+- `variables`: Array representing current variable assignments (-1, 0, 1; -1 for false, 1 for true, 0 for unassigned)
 - `clauses`: Array indicating which clauses are currently satisfied
 - `variable_assignment`: Dictionary mapping variable indices to boolean values
 - `clause_satisfaction`: Boolean array indicating which clauses are satisfied
@@ -71,7 +144,7 @@ Actions are integer indices corresponding to variables to flip (0-indexed, with 
 
 ## Reward Functions
 
-SatRLGym provides several reward function modes:
+SymbolicGym provides several reward function modes:
 
 - **Sparse**: Reward only on problem solution (+1 for solving, 0 otherwise)
 - **Dense**: Incremental rewards based on clause satisfaction changes
@@ -81,22 +154,22 @@ Example of selecting a reward mode:
 
 ```python
 # Create environment with dense rewards
-env = gym.make("SatRLGym-v0", cnf_file="problem.cnf", reward_mode="dense")
+env = gym.make("SymbolicGym-v0", cnf_file="problem.cnf", reward_mode="dense")
 ```
 
 ## Supported Environments
 
-SatRLGym provides several environment configurations:
+SymbolicGym provides several environment configurations:
 
-| Environment          | Description                                         |
-| -------------------- | --------------------------------------------------- |
-| `SatRLGym-v0`        | Core environment with variable flipping actions     |
-| `SatRLGym-Guided-v0` | Environment with CDCL oracle guidance               |
-| `SatRLGym-UNSAT-v0`  | Environment with rewards for UNSAT proof generation |
+| Environment             | Description                                                                                                |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `SymbolicGym-v0`        | Core environment with variable flipping actions                                                            |
+| `SymbolicGym-Guided-v0` | Environment with CDCL oracle guidance _(experimental, may not be available in all releases)_               |
+| `SymbolicGym-UNSAT-v0`  | Environment with rewards for UNSAT proof generation _(experimental, may not be available in all releases)_ |
 
 ## Oracle Guidance
 
-SatRLGym includes an oracle system that allows integration with traditional SAT solving heuristics:
+SymbolicGym includes an oracle system that allows integration with traditional SAT solving heuristics:
 
 - **What are Oracles?**: Components that provide expert guidance for variable selection and evaluation
 - **Types of Oracles**:
@@ -106,10 +179,10 @@ SatRLGym includes an oracle system that allows integration with traditional SAT 
 ### Oracle Integration Example
 
 ```python
-from satrlgym.oracles import SimpleDPLLOracle
+from symbolicgym.oracles import SimpleDPLLOracle
 
 # Create environment and oracle
-env = gym.make("SatRLGym-v0", cnf_file="problem.cnf")
+env = gym.make("SymbolicGym-v0", cnf_file="problem.cnf")
 oracle = SimpleDPLLOracle(env.clauses, env.num_vars)
 
 # Use oracle for guidance
@@ -155,10 +228,10 @@ class GreedySATAgent:
 
 ## Proof Verification
 
-SatRLGym includes DRAT proof verification for unsatisfiable instances:
+SymbolicGym includes DRAT proof verification for unsatisfiable instances:
 
 ```python
-from satrlgym.proofs.verification import ProofVerificationManager
+from symbolicgym.proofs.verification import ProofVerificationManager
 
 # Verify a DRAT proof
 verifier = ProofVerificationManager()
@@ -172,7 +245,7 @@ valid = verifier.verify_solution(cnf, proof)
 Use proof verification within your environment for enhanced rewards:
 
 ```python
-from satrlgym.proofs.verification import ProofVerificationManager
+from symbolicgym.proofs.verification import ProofVerificationManager
 
 # In your environment wrapper
 verifier = ProofVerificationManager()
@@ -185,10 +258,10 @@ if verifier.is_available():
 
 ## Visualization Tools
 
-SatRLGym includes tools for visualizing agent behavior:
+SymbolicGym includes tools for visualizing agent behavior:
 
 ```python
-from satrlgym.visualization import DataVisualizer
+from symbolicgym.visualization import DataVisualizer
 
 visualizer = DataVisualizer(experiment_path="path/to/experiment")
 visualizer.plot_clause_satisfaction()
@@ -198,11 +271,11 @@ visualizer.plot_reward_curve()
 
 ## Using Standard Benchmarks
 
-SatRLGym supports standard DIMACS CNF benchmark files:
+SymbolicGym supports standard DIMACS CNF benchmark files:
 
 ```python
 # Using a standard benchmark from SATLIB
-env = gym.make("SatRLGym-v0", cnf_file="benchmarks/uf50-01.cnf")
+env = gym.make("SymbolicGym-v0", cnf_file="benchmarks/uf50-01.cnf")
 
 # Or directly from DIMACS string
 dimacs_string = """
@@ -211,15 +284,64 @@ p cnf 3 3
 -1 3 0
 -2 -3 0
 """
-from satrlgym.utils import parse_dimacs
+from symbolicgym.utils import parse_dimacs
 formula = parse_dimacs(dimacs_string)
-env = gym.make("SatRLGym-v0", formula=formula)
+env = gym.make("SymbolicGym-v0", formula=formula)
 ```
 
 Common benchmark sources:
 
 - [SATLIB](https://www.cs.ubc.ca/~hoos/SATLIB/benchm.html)
 - [SAT Competition](http://www.satcompetition.org/)
+
+### Training with Different Reward Modes
+
+SymbolicGym provides several reward modes suitable for different training scenarios:
+
+```python
+# Sparse reward mode - only rewards on complete solution
+env_sparse = gym.make("SymbolicGym-v0", formula=formula, reward_mode="sparse")
+
+# Dense reward mode - rewards progress in satisfying clauses
+env_dense = gym.make("SymbolicGym-v0", formula=formula, reward_mode="dense")
+
+# Learning reward mode - shaped rewards for better learning signal
+env_learning = gym.make("SymbolicGym-v0", formula=formula, reward_mode="learning")
+```
+
+Each reward mode changes the learning dynamics:
+
+| Reward Mode | When to Use          | Characteristics                              |
+| ----------- | -------------------- | -------------------------------------------- |
+| Sparse      | For simple problems  | +1 only when problem is solved               |
+| Dense       | For faster learning  | Rewards for each additional satisfied clause |
+| Learning    | For complex problems | Balances exploration and exploitation        |
+
+### Integrating with Neural Networks
+
+When working with neural networks, you'll need to preprocess observations:
+
+```python
+def create_state_representation(observation):
+    """Convert observation dict to a flat vector for neural networks."""
+    # Extract observation components
+    variables = observation['variables']  # Variable assignments
+    clauses = observation['clauses']     # Clause satisfaction
+
+    # You can also include other features like:
+    # - Number/percentage of satisfied clauses
+    # - Variable occurrence statistics
+    # - Recent variable flip history
+
+    # Create combined feature vector
+    features = np.concatenate([
+        variables,  # Current variable assignments
+        clauses,    # Current clause satisfactions
+        [np.mean(clauses)],  # Percentage of satisfied clauses
+    ])
+
+    return features
+```
 
 ## Performance Benchmarking
 
@@ -234,14 +356,14 @@ python scripts/benchmark_solvers.py --time_limit 60
 ## Project Structure
 
 ```
-src/satrlgym/
+src/symbolicgym/
 ├── __init__.py               # Package initialization and registration
 ├── envs/                     # Environment implementations
 │   ├── core.py               # Core environment classes
 │   └── rewards.py            # Reward function implementations
 ├── oracles/                  # Oracle implementations for guidance
 │   ├── base_oracle.py        # Abstract oracle base class
-│   └── sat_oracle.py         # SAT solver oracle implementation
+│   └── simple_oracle.py      # SAT solver oracle implementation (was previously listed as sat_oracle.py)
 ├── proofs/                   # Proof verification components
 │   ├── drat.py               # DRAT proof checker implementation
 │   └── verification.py       # Verification management utilities
@@ -275,14 +397,14 @@ We welcome contributions! Please see CONTRIBUTING.md for guidelines.
 
 ## Citation
 
-If you use SatRLGym in your research, please cite:
+If you use SymbolicGym in your research, please cite:
 
 ```bibtex
-@software{satrlgym2025,
-  title = {SatRLGym: Reinforcement Learning for Boolean Satisfiability Problems},
-  author = {SAT+RL Project Contributors},
+@software{symbolicgym2025,
+  title = {SymbolicGym: Reinforcement Learning for Symbolic Reasoning Domains},
+  author = {Symbolic Reasoning Project Contributors},
   year = {2025},
-  url = {https://github.com/frecsh/SatRLGym}
+  url = {https://github.com/frecsh/SymbolicGym}
 }
 ```
 

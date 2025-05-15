@@ -1,0 +1,14 @@
+# Curriculum configuration for SymPy domain
+curriculum:
+  - name: easy
+    expr: "x + 1"
+    target: "x + 1"
+    description: "Trivial identity."
+  - name: medium
+    expr: "x**2 + 2*x + 1"
+    target: "(x + 1)**2"
+    description: "Quadratic expansion/factorization."
+  - name: hard
+    expr: "sin(x)**2 + cos(x)**2"
+    target: "1"
+    description: "Trigonometric identity."

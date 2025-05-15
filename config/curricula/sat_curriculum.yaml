@@ -1,0 +1,17 @@
+# Curriculum configuration for SAT domain
+curriculum:
+  - name: easy
+    num_vars: 3
+    num_clauses: 4
+    clause_length: 2
+    description: "Simple 3-variable SAT problems."
+  - name: medium
+    num_vars: 5
+    num_clauses: 10
+    clause_length: 3
+    description: "Medium difficulty SAT problems."
+  - name: hard
+    num_vars: 10
+    num_clauses: 40
+    clause_length: 3
+    description: "Hard SAT problems with more variables and clauses."

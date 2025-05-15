@@ -1,0 +1,6 @@
+# Config for Symbolic Algebra MVP RL Experiment
+learning_rate: 0.001
+lambda_forward: 0.1
+lambda_inverse: 0.1
+batch_size: 64
+max_steps: 20

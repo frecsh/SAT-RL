@@ -1,0 +1,11 @@
+# Curriculum configuration for Z3 domain
+curriculum:
+  - name: easy
+    constraints: ["x > 0"]
+    description: "Single variable constraint."
+  - name: medium
+    constraints: ["x > 0", "x < 5"]
+    description: "Two constraints on one variable."
+  - name: hard
+    constraints: ["x + y > 0", "x * y < 10"]
+    description: "Multi-variable SMT constraints."
