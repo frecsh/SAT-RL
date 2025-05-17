@@ -24,3 +24,36 @@ def gumbel_sigmoid(logits, tau=1.0, hard=True):
 
 
 gumbel_sigmoid.__module__ = "symbolicgym.agents.marl.communication"
+
+
+class Message:
+    """Basic message structure for agent communication."""
+
+    def __init__(self, sender, content, hint=False, blackboard_entry=None):
+        self.sender = sender
+        self.content = content  # e.g., vector, dict, etc.
+        self.hint = hint
+        self.blackboard_entry = blackboard_entry
+
+    def __repr__(self):
+        return (
+            f"Message(sender={self.sender}, hint={self.hint}, content={self.content})"
+        )
+
+
+class CommunicationChannel:
+    """Simple message passing channel for agents."""
+
+    def __init__(self):
+        self.messages = []
+
+    def send(self, message):
+        self.messages.append(message)
+
+    def receive(self, agent_id=None):
+        if agent_id is None:
+            return self.messages
+        return [m for m in self.messages if m.sender != agent_id]
+
+    def clear(self):
+        self.messages = []

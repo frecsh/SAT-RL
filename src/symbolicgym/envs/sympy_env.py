@@ -2,8 +2,10 @@ import gymnasium as gym
 import numpy as np
 import sympy as sp
 
+from symbolicgym.envs.base_env import BaseEnv
 
-class SymPyGymEnv(gym.Env):
+
+class SymPyEnv(BaseEnv):
     """Feature-complete SymPy transformation environment for SymbolicGym."""
 
     metadata = {"render_modes": ["human"]}
@@ -15,7 +17,9 @@ class SymPyGymEnv(gym.Env):
         render_mode=None,
         max_steps=100,
         seed=None,
+        debug=False,
     ):
+        super().__init__(config=None, debug=debug)
         self.expr = expr or sp.sympify("x + 1")
         self.reward_mode = reward_mode
         self.render_mode = render_mode
@@ -43,6 +47,8 @@ class SymPyGymEnv(gym.Env):
         self.current_expr = self.expr
         self._prev_score = self._score(self.current_expr)
         obs, info = self._get_obs_info()
+        if self.debug:
+            self.log_debug_info()
         return obs, info
 
     def step(self, action):
@@ -70,6 +76,8 @@ class SymPyGymEnv(gym.Env):
         self._prev_score = score
         terminated = self._is_solved(self.current_expr)
         truncated = self.current_step >= self.max_steps and not terminated
+        if self.debug:
+            self.log_debug_info()
         return obs, reward, terminated, truncated, info
 
     def _score(self, expr):
@@ -97,3 +105,12 @@ class SymPyGymEnv(gym.Env):
     def render(self, mode="human"):
         print(f"Step: {self.current_step}")
         print("Expr:", self.current_expr)
+
+    def log_debug_info(self):
+        # Advanced logging: clause satisfaction, feedback vectors, agent actions, etc.
+        print(
+            f"[DEBUG] Clause satisfaction: {getattr(self, 'clause_satisfaction', None)}"
+        )
+        print(f"[DEBUG] Feedback vector: {getattr(self, 'feedback_vector', None)}")
+        print(f"[DEBUG] Last agent actions: {getattr(self, 'last_actions', None)}")
+        # ...add more as needed...

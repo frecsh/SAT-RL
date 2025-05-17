@@ -1,0 +1,3 @@
+# Example config for modular observation and cross-domain env
+observation_mode: dict # options: dict, flat, graph
+backend: sat # options: sat, sympy, z3

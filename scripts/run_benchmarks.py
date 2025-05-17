@@ -11,7 +11,7 @@ import numpy as np
 # Add the project root to the path for imports
 sys.path.append(".")
 
-# Replace SatGymEnv with SymbolicSatEnv from symbolicgym.domains.sat (update as needed)
+# Replace SatEnv with SatEnv from symbolicgym.envs.sat_env (update as needed)
 # from symbolicgym.domains.sat.env import SymbolicSatEnv
 SymbolicSatEnv = None  # TODO: Replace with actual class
 

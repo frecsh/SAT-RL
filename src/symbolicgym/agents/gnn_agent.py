@@ -66,7 +66,8 @@ class GNNCrossDomainAgent:
             total_reward = 0
             for _ in range(num_episodes):
                 action = env.action_space.sample()
-                obs, reward, terminated, truncated, _ = env.step(action)
+                result = env.step(action)
+                obs, reward, terminated, truncated, *_ = result
                 total_reward += reward
                 if terminated or truncated:
                     obs, _ = env.reset()

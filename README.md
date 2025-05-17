@@ -13,6 +13,103 @@ SymbolicGym is a general-purpose, extensible Gym-compatible platform for reinfor
 
 The diagram above illustrates how the core environment, symbolic domains (SAT, SymPy, Z3), domain registry, feedback and representation layers, agents (DQN, PPO, GNN, CTDE, GRPO, MoE, Imitation), and interpretability/visualization tools interact within SymbolicGym.
 
+## Major Features (2025)
+
+- **Unified multi-agent and single-agent RL for symbolic domains (SAT, SymPy, Z3)**
+- **Advanced multi-agent support:**
+  - Native multi-agent environments (per-agent state, action, and observation spaces)
+  - PettingZoo-style wrappers and API compatibility
+  - Centralized Training, Decentralized Execution (CTDE) agents
+  - Modular agent communication with bandwidth penalty
+  - Conflict resolution and per-agent reward shaping
+- **Cross-domain generalization:**
+  - Abstract environment API for graph, vector, and dict observations
+  - Pluggable symbolic-feedback backends (SAT, SymPy, Z3)
+  - Shared encoder (MLP, GNN, GAT, DeeperGNN) for cross-domain transfer
+  - Modular observation wrappers (dict/flat/graph conversion)
+- **GNN-based RL pipeline:**
+  - PPO pipeline with GNN encoder for SAT and multi-agent settings
+  - Example scripts for multi-agent and cross-domain training
+- **Comprehensive test suite:**
+  - Dedicated tests for multi-agent step/reset, wrappers, CTDE, communication, and bandwidth penalty
+  - Cross-domain abstraction and generalization tests
+- **Documentation:**
+  - Detailed feedback metric documentation
+  - Architecture and usage examples for all advanced features
+
+## Quick Multi-Agent Example
+
+```python
+import gymnasium as gym
+import symbolicgym
+
+# Multi-agent SAT environment
+env = gym.make("SymbolicGym-v0", multi_agent_mode=True, n_agents=2)
+obs, info = env.reset()
+
+# Random actions for each agent
+actions = {aid: env.action_space[aid].sample() for aid in obs}
+next_obs, rewards, dones, truncated, infos = env.step(actions)
+```
+
+## Cross-Domain & GNN Example
+
+```python
+from symbolicgym.models.shared_encoder import SharedEncoder
+
+# Use graph observation mode for GNNs
+env = gym.make("SymbolicGym-v0", observation_mode="graph")
+obs, info = env.reset()
+encoder = SharedEncoder(mode="gnn", input_dim=..., hidden_dim=...)
+features = encoder(obs)
+```
+
+## Multi-Agent CTDE Example
+
+```python
+from symbolicgym.agents.marl.ctde_agent import CTDEAgent
+
+# Setup for 2 agents
+state_dim = ... # flatten observation space as needed
+action_dim = env.action_space["agent_0"].n
+agent = CTDEAgent(2, state_dim, action_dim)
+obs, info = env.reset()
+actions = agent.act([obs["agent_0"], obs["agent_1"]])
+```
+
+## Automated Experiment Workflow
+
+1. **Write experiment config:**
+
+   - Place YAML/JSON config in `config/exp1.yaml` (specifies agents, envs, seeds, metrics, etc.)
+
+2. **Launch experiments:**
+
+   ```sh
+   python scripts/experiment_orchestrator.py --config config/exp1.yaml --n_runs 10 --parallel 4
+   ```
+
+3. **Aggregate and visualize results:**
+
+   ```sh
+   python scripts/generate_report.py --input results/exp1/
+   ```
+
+4. **(Optional) Launch dashboard:**
+
+   ```sh
+   python scripts/dashboard.py --input results/exp1/
+   # or open the Jupyter notebook in notebooks/
+   ```
+
+5. **Reproduce any run:**
+   - Use logged config, seed, and code version in `results/exp1/experiment_metadata.json` to exactly rerun any experiment.
+
+## Test Coverage
+
+- All multi-agent, cross-domain, and modular RL features are covered by dedicated tests in `tests/`.
+- See `tests/test_multiagent_architecture.py` and `tests/test_crossdomain_generalization.py` for reference.
+
 ## Key Contributions
 
 - **Unified RL platform for SAT, SymPy, and Z3 symbolic domains**
@@ -197,6 +294,18 @@ if "suggested_assignments" in guidance:
 else:
     action = env.action_space.sample()
 ```
+
+## SAT Environment Feedback Metrics
+
+The SAT environment provides a rich feedback vector for each agent at every step:
+
+- **clause_satisfaction**: Fraction of SAT clauses currently satisfied by the agent’s assignment.
+- **variable_decisiveness**: Fraction of variables that have been assigned a value (measures how “decided” the agent is).
+- **search_diversity**: The standard deviation of the variable assignments. High diversity means the agent is exploring a variety of assignments, while low diversity means assignments are similar (less exploration).
+- **constraint_tension**: The average absolute sum of literals in each clause. This can reflect how “tight” or “conflicted” the current formula is under the agent’s assignment.
+- **proof_progress**: A composite metric: `clause_satisfaction * variable_decisiveness`. It measures how much progress the agent has made toward a full, satisfying assignment.
+
+These metrics help analyze not just whether agents are solving the SAT, but how they are exploring, coordinating, and progressing.
 
 ## Implementing Custom Agents
 
