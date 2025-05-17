@@ -101,6 +101,7 @@ docs/_build/
 docs/generated/
 doc/_build/
 doc/generated/
+architecture_diagram.drawio
 
 
 # OS specific files
