@@ -30,7 +30,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          poetry install ruff
+          poetry add ruff
 
       - name: Lint with ruff
         run: |
