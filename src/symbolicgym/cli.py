@@ -1,9 +1,6 @@
-"""
-SymbolicGym CLI launcher for training, evaluation, and benchmarking
-"""
+"""SymbolicGym CLI launcher for training, evaluation, and benchmarking."""
+
 import argparse
-import sys
-from pathlib import Path
 
 import yaml
 
@@ -23,12 +20,12 @@ def main():
     args = parser.parse_args()
     if args.command == "train":
         with open(args.config) as f:
-            config = yaml.safe_load(f)
+            yaml.safe_load(f)
         # TODO: Call training script with config and debug flag
         print(f"[CLI] Training with config: {args.config}, debug={args.debug}")
     elif args.command == "eval":
         with open(args.config) as f:
-            config = yaml.safe_load(f)
+            yaml.safe_load(f)
         # TODO: Call eval script with config and debug flag
         print(f"[CLI] Evaluating with config: {args.config}, debug={args.debug}")
     else:

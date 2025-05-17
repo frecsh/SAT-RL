@@ -1,6 +1,4 @@
-"""
-SAT-specific utility functions for SymbolicGym SAT domain.
-"""
+"""SAT-specific utility functions for SymbolicGym SAT domain."""
 # TODO: Move SAT utilities here from legacy codebase.
 
 

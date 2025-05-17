@@ -1,6 +1,5 @@
-"""
-Fixed seed management for SymbolicGym.
-"""
+"""Fixed seed management for SymbolicGym."""
+
 import os
 import random
 

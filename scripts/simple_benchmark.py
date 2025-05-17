@@ -1,6 +1,5 @@
-"""
-Simple script to run SAT environment benchmarks.
-"""
+"""Simple script to run SAT environment benchmarks."""
+
 import csv
 import random
 import sys
@@ -27,7 +26,6 @@ def generate_random_ksat(n_vars, clause_ratio=4.2, k=3, seed=None):
 
 
 # Import the SAT environment from symbolicgym (update to correct class if needed)
-from symbolicgym.domains.sat import utils as sat_utils
 
 # Placeholder: from symbolicgym.domains.sat.env import SymbolicSatEnv
 SymbolicSatEnv = None  # TODO: Replace with actual class
@@ -99,7 +97,7 @@ if __name__ == "__main__":
             for result in results:
                 writer.writerow(result)
 
-        print(f"Benchmark results saved to benchmark_results.csv")
+        print("Benchmark results saved to benchmark_results.csv")
 
     except Exception as e:
         import traceback

@@ -1,8 +1,7 @@
+"""Ready-to-run PPO pipeline using SharedEncoder (GNN) for SAT environment.
+Requires: torch, torch_geometric, gymnasium, symbolicgym.
 """
-Ready-to-run PPO pipeline using SharedEncoder (GNN) for SAT environment.
-Requires: torch, torch_geometric, gymnasium, symbolicgym
-"""
-import numpy as np
+
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -89,8 +88,8 @@ def select_multiagent_action(policy, graph_data_list):
 def process_obs(obs):
     obs_wrapper = ObservationWrapper(mode="graph")
     graph_obs = obs_wrapper.convert(obs)
-    num_vars = len(obs["variables"])
-    num_clauses = len(obs["clauses"])
+    len(obs["variables"])
+    len(obs["clauses"])
     nodes = torch.tensor(
         [[v] for v in obs["variables"]] + [[c] for c in obs["clauses"]],
         dtype=torch.float32,
@@ -105,8 +104,8 @@ def process_multiagent_obs(obs, agent_ids):
     for aid in agent_ids:
         agent_obs = obs[aid]
         graph_obs = obs_wrapper.convert(agent_obs)
-        num_vars = len(agent_obs["variables"])
-        num_clauses = len(agent_obs["clauses"])
+        len(agent_obs["variables"])
+        len(agent_obs["clauses"])
         nodes = torch.tensor(
             [[v] for v in agent_obs["variables"]] + [[c] for c in agent_obs["clauses"]],
             dtype=torch.float32,
@@ -202,7 +201,7 @@ def main():
                     optimizer.step()
         mean_rewards = [torch.stack(rewards[i]).mean().item() for i in range(n_agents)]
         print(
-            f"Epoch {epoch+1} complete. Mean rewards: {[f'{r:.3f}' for r in mean_rewards]}"
+            f"Epoch {epoch + 1} complete. Mean rewards: {[f'{r:.3f}' for r in mean_rewards]}"
         )
 
 

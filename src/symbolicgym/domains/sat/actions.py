@@ -1,6 +1,5 @@
-"""
-SAT branching decision action head: pick variable and polarity.
-"""
+"""SAT branching decision action head: pick variable and polarity."""
+
 import numpy as np
 
 from symbolicgym.core.action_spaces import SATBranchAction
@@ -15,9 +14,8 @@ def pick_branching_action(assignments, num_vars):
 
 
 class SATBranchingActionSpace:
-    """
-    Action space for SAT branching: pick variable and polarity.
-    action = (var_idx, polarity) where polarity in {0,1}
+    """Action space for SAT branching: pick variable and polarity.
+    action = (var_idx, polarity) where polarity in {0,1}.
     """
 
     def __init__(self, num_vars):
@@ -32,4 +30,4 @@ class SATBranchingActionSpace:
 
     def to_human(self, action):
         var, pol = action
-        return f"Flip variable v{var+1} to {'True' if pol else 'False'}"
+        return f"Flip variable v{var + 1} to {'True' if pol else 'False'}"

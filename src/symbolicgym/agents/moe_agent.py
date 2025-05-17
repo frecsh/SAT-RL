@@ -71,6 +71,6 @@ class MoEAgent(BaseAgent):
 
     def load(self, path):
         d = torch.load(path)
-        for expert, state in zip(self.experts, d["experts"]):
+        for expert, state in zip(self.experts, d["experts"], strict=False):
             expert.load_state_dict(state)
         self.gate.load_state_dict(d["gate"])

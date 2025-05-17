@@ -1,6 +1,5 @@
-"""
-SymPy transformation action space: list and apply named transformations.
-"""
+"""SymPy transformation action space: list and apply named transformations."""
+
 import numpy as np
 import sympy as sp
 from sympy import expand, factor, simplify
@@ -45,9 +44,8 @@ action_registry = {
 
 
 class SymPyTransformationActionSpace:
-    """
-    Action space for SymPy transformations: e.g., simplify, expand, factor.
-    action = int index of transformation
+    """Action space for SymPy transformations: e.g., simplify, expand, factor.
+    action = int index of transformation.
     """
 
     TRANSFORMATIONS = [simplify, expand, factor]

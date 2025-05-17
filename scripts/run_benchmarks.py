@@ -1,6 +1,5 @@
-"""
-Script to run benchmarks for the SAT environment with different problem sizes.
-"""
+"""Script to run benchmarks for the SAT environment with different problem sizes."""
+
 import random
 import sys
 import time
@@ -154,7 +153,7 @@ def run_benchmarks():
 
     plt.tight_layout()
     plt.savefig("environment_scaling.png")
-    print(f"Saved scaling plots to 'environment_scaling.png'")
+    print("Saved scaling plots to 'environment_scaling.png'")
 
     # Save CSV data
     with open("environment_scaling.csv", "w") as f:
@@ -162,7 +161,7 @@ def run_benchmarks():
         for r in results:
             f.write(f"{r['problem_size']},{r['reset_time']},{r['avg_step_time']}\n")
 
-    print(f"Saved scaling data to 'environment_scaling.csv'")
+    print("Saved scaling data to 'environment_scaling.csv'")
 
 
 if __name__ == "__main__":

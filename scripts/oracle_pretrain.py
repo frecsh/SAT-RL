@@ -1,6 +1,5 @@
-"""
-Script for oracle imitation pre-training.
-"""
+"""Script for oracle imitation pre-training."""
+
 import numpy as np
 
 from symbolicgym.agents.imitation_agent import ImitationAgent

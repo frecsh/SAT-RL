@@ -1,14 +1,12 @@
-"""
-Abstract base environment for cross-domain symbolic RL.
+"""Abstract base environment for cross-domain symbolic RL.
 Supports graph and vector representations, and pluggable backend logic.
 """
+
 import gymnasium as gym
-import numpy as np
 
 
 class AbstractSymbolicEnv(gym.Env):
-    """
-    Abstract environment for SAT, SymPy, Z3, etc.
+    """Abstract environment for SAT, SymPy, Z3, etc.
     Provides unified observation builder and backend delegation.
     """
 

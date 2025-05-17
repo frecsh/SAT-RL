@@ -36,7 +36,7 @@ def log_episode(
         "action_id",
     ]
     # Extract feedback fields if present
-    is_seq = isinstance(feedback, (list, tuple)) or (
+    is_seq = isinstance(feedback, list | tuple) or (
         np is not None and isinstance(feedback, np.ndarray)
     )
     degree = feedback[1] if is_seq and len(feedback) > 1 else None

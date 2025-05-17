@@ -1,7 +1,4 @@
-"""
-Reporting utilities for SymbolicGym: save results, generate summaries, dashboard hooks
-"""
-import os
+"""Reporting utilities for SymbolicGym: save results, generate summaries, dashboard hooks."""
 
 import pandas as pd
 

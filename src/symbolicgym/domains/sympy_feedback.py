@@ -1,6 +1,5 @@
-"""
-SymPy feedback backend for SymbolicGym, supporting shared observation API.
-"""
+"""SymPy feedback backend for SymbolicGym, supporting shared observation API."""
+
 import numpy as np
 
 

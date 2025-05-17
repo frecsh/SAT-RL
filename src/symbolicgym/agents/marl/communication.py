@@ -1,13 +1,11 @@
-"""
-Inter-agent communication: 1-bit gating mask per message (Gumbel-Sigmoid).
-"""
+"""Inter-agent communication: 1-bit gating mask per message (Gumbel-Sigmoid)."""
+
 import torch
-import torch.nn.functional as F
 
 
 def gumbel_sigmoid(logits, tau=1.0, hard=True):
-    """
-    Sample a 1-bit gating mask using Gumbel-Sigmoid.
+    """Sample a 1-bit gating mask using Gumbel-Sigmoid.
+
     Args:
         logits: torch.Tensor
         tau: temperature

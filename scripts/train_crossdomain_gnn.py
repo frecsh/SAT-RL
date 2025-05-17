@@ -1,9 +1,7 @@
-"""
-Train a GNN agent across SAT, SymPy, and Z3 domains using SymbolicGym.
-"""
+"""Train a GNN agent across SAT, SymPy, and Z3 domains using SymbolicGym."""
+
 import gymnasium as gym
 
-import symbolicgym
 from symbolicgym.agents.gnn_agent import GNNCrossDomainAgent
 from symbolicgym.utils.reproducibility import set_seed
 

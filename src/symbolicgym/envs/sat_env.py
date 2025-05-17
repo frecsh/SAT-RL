@@ -6,8 +6,7 @@ from symbolicgym.envs.base_env import BaseEnv
 
 
 class SatEnv(BaseEnv):
-    """
-    Feature-complete SAT environment for SymbolicGym.
+    """Feature-complete SAT environment for SymbolicGym.
 
     Feedback metric descriptions:
         - clause_satisfaction: Fraction of SAT clauses currently satisfied by the agent’s assignment.

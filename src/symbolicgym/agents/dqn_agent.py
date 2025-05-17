@@ -61,7 +61,7 @@ class DQNAgent(BaseAgent):
         if len(self.buffer) < self.batch_size:
             return
         batch = random.sample(self.buffer, self.batch_size)
-        states, actions, rewards, next_states, dones = zip(*batch)
+        states, actions, rewards, next_states, dones = zip(*batch, strict=False)
         states = torch.FloatTensor(states).to(self.device)
         actions = torch.LongTensor(actions).unsqueeze(1).to(self.device)
         rewards = torch.FloatTensor(rewards).unsqueeze(1).to(self.device)

@@ -1,7 +1,6 @@
 import sys
 
 sys.path.append("../../src")
-import torch
 
 from symbolicgym.agents.comm_agent import CommAgent
 from symbolicgym.agents.marl.communication import CommunicationChannel

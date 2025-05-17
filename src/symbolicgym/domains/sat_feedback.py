@@ -2,8 +2,7 @@ import numpy as np
 
 
 class SATFeedback:
-    """
-    Feedback vector for SAT environments. Metrics:
+    """Feedback vector for SAT environments. Metrics:
     - clause_satisfaction: Fraction of satisfied clauses
     - variable_decisiveness: Fraction of variables assigned
     - search_diversity: Std of variable assignments (exploration)
@@ -11,12 +10,11 @@ class SATFeedback:
     - proof_progress: clause_satisfaction * variable_decisiveness
     - clause_centrality: Mean degree (variable occurrence) per variable
     - assignment_entropy: Entropy of variable assignment distribution
-    - clause_length_var: Variance of clause lengths
+    - clause_length_var: Variance of clause lengths.
     """
 
     def get_feedback(self, variable_assignment, clauses, num_vars):
-        """
-        Compute feedback metrics for SAT environments.
+        """Compute feedback metrics for SAT environments.
 
         Args:
             variable_assignment (dict): Mapping of variable indices to their assigned values (0, 1, or unassigned).

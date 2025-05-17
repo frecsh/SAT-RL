@@ -1,15 +1,15 @@
-"""
-Representational Similarity Analysis (RSA) for SymbolicGym.
-"""
+"""Representational Similarity Analysis (RSA) for SymbolicGym."""
+
 import numpy as np
 
 
 def compute_rsa(matrix_a, matrix_b):
-    """
-    Compute RSA (correlation of similarity matrices) between two sets of representations.
+    """Compute RSA (correlation of similarity matrices) between two sets of representations.
+
     Args:
         matrix_a: np.ndarray (N x D)
         matrix_b: np.ndarray (N x D)
+
     Returns:
         rsa_score: float
     """

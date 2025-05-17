@@ -1,10 +1,3 @@
-import os
-from pathlib import Path
-
-import gymnasium as gym
-
-import symbolicgym
-
 # Create a simple SAT formula
 formula = {
     "clauses": [[1, 2, 3], [-1, -2], [2, -3], [1, -3]],
@@ -29,7 +22,7 @@ done = False
 
 while not done:
     action = env.action_space.sample()  # Random action
-    print(f"Taking action: {action} (flipping variable {action+1})")
+    print(f"Taking action: {action} (flipping variable {action + 1})")
 
     obs, reward, terminated, truncated, info = env.step(action)
     total_reward += reward

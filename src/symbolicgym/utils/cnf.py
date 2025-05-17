@@ -1,6 +1,4 @@
-"""
-CNF file loading utilities for SymbolicGym.
-"""
+"""CNF file loading utilities for SymbolicGym."""
 
 from symbolicgym.domains.sat.loaders.satcomp_loader import load_dimacs_cnf
 

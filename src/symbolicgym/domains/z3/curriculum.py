@@ -1,7 +1,4 @@
-"""
-Z3 constraint complexity curriculum for SymbolicGym.
-"""
-import random
+"""Z3 constraint complexity curriculum for SymbolicGym."""
 
 from symbolicgym.curriculum.curriculum_base import CurriculumBase
 

@@ -1,6 +1,5 @@
-"""
-Z3 domain metrics for SymbolicGym.
-"""
+"""Z3 domain metrics for SymbolicGym."""
+
 import time
 
 

@@ -1,6 +1,4 @@
-"""
-Advanced Usage Examples: Feedback-Driven Reward Integration in SatEnv
-"""
+"""Advanced Usage Examples: Feedback-Driven Reward Integration in SatEnv."""
 # Feedback vector index mapping for SatEnv (order matches SATFeedback.get_feedback):
 # 0: clause_satisfaction
 # 1: variable_decisiveness
@@ -11,14 +9,8 @@ Advanced Usage Examples: Feedback-Driven Reward Integration in SatEnv
 # 6: assignment_entropy
 # 7: clause_length_var
 
-import numpy as np
-
 from symbolicgym.envs.sat_env import SatEnv
-from symbolicgym.utils.feedback_metrics import (
-    FEEDBACK_VECTOR_INDEX_TO_NAME,
-    FEEDBACK_VECTOR_METRICS,
-    FEEDBACK_VECTOR_NAME_TO_INDEX,
-)
+from symbolicgym.utils.feedback_metrics import FEEDBACK_VECTOR_INDEX_TO_NAME
 
 # 1. Single-Agent: Custom Feedback-Weighted Reward
 print("\n--- Single-Agent Custom Feedback-Weighted Reward ---")

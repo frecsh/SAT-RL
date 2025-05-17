@@ -1,12 +1,11 @@
-"""
-Constraint reduction visualizer for Z3 domain.
-"""
+"""Constraint reduction visualizer for Z3 domain."""
+
 import matplotlib.pyplot as plt
 
 
 def plot_constraint_reduction(initial_constraints, final_constraints, ax=None):
-    """
-    Plot reduction in number of constraints before and after solving.
+    """Plot reduction in number of constraints before and after solving.
+
     Args:
         initial_constraints: list
         final_constraints: list

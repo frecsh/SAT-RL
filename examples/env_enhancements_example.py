@@ -1,9 +1,8 @@
-"""
-Example usage of graph-based state representations, action spaces, and reward system in SymbolicGym.
-"""
+"""Example usage of graph-based state representations, action spaces, and reward system in SymbolicGym."""
+
 import sympy as sp
 
-from symbolicgym.core.action_spaces import SATBranchAction, SymPyTransformAction
+from symbolicgym.core.action_spaces import SymPyTransformAction
 from symbolicgym.core.rewards import LinearAnnealingRewardShaping
 from symbolicgym.domains.sat.actions import pick_branching_action
 from symbolicgym.domains.sympy.actions import (

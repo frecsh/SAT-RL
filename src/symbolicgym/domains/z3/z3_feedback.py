@@ -1,6 +1,5 @@
-"""
-Z3Feedback: SymbolicFeedback stub for SMT (Z3) domain in SymbolicGym.
-"""
+"""Z3Feedback: SymbolicFeedback stub for SMT (Z3) domain in SymbolicGym."""
+
 from symbolicgym.core.feedback_vectors import SymbolicFeedbackVector
 from symbolicgym.core.symbolic_feedback import SymbolicFeedback
 

@@ -1,6 +1,5 @@
-"""
-SymPyFeedback: SymbolicFeedback implementation for SymPy domain in SymbolicGym.
-"""
+"""SymPyFeedback: SymbolicFeedback implementation for SymPy domain in SymbolicGym."""
+
 import sympy as sp
 
 from symbolicgym.core.feedback_vectors import SymbolicFeedbackVector
@@ -11,7 +10,7 @@ class SymPyFeedback(SymbolicFeedback):
     """Symbolic feedback backend for symbolic algebra tasks (SymPy)."""
 
     def init_state(self, expr="x**2 + 2*x + 1", target="(x + 1)**2"):
-        x = sp.symbols("x")
+        sp.symbols("x")
         return {"expr": sp.sympify(expr), "target": sp.sympify(target)}
 
     def apply_action(self, state, action):

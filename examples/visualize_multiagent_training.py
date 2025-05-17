@@ -2,7 +2,6 @@ import sys
 
 sys.path.append("../../src")
 import matplotlib.pyplot as plt
-import torch
 
 from symbolicgym.agents.comm_agent import CommAgent
 from symbolicgym.agents.marl.communication import CommunicationChannel

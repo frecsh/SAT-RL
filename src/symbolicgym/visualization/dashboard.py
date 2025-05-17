@@ -1,12 +1,11 @@
-"""
-Unified visualization dashboard for SymbolicGym.
-"""
+"""Unified visualization dashboard for SymbolicGym."""
+
 import matplotlib.pyplot as plt
 
 
 def show_dashboard(figures, layout=(1, 1)):
-    """
-    Display multiple matplotlib figures in a dashboard layout.
+    """Display multiple matplotlib figures in a dashboard layout.
+
     Args:
         figures: list of matplotlib Figure or Axes
         layout: tuple (rows, cols)

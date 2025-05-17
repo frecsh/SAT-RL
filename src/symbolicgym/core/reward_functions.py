@@ -1,6 +1,4 @@
-"""
-Reward calculation functions for SymbolicGym SAT environments.
-"""
+"""Reward calculation functions for SymbolicGym SAT environments."""
 
 
 def sparse_reward(

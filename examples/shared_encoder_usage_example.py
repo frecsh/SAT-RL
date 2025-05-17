@@ -1,6 +1,5 @@
-"""
-Example usage of SharedEncoder with advanced GNNs in a training pipeline.
-"""
+"""Example usage of SharedEncoder with advanced GNNs in a training pipeline."""
+
 import torch
 
 from symbolicgym.models.shared_encoder import SharedEncoder

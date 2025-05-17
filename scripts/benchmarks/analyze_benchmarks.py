@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Analyze and visualize benchmark results from SAT solver comparisons.
+"""Analyze and visualize benchmark results from SAT solver comparisons.
 This script provides more detailed statistical analysis than the
 visualizations generated during benchmark runs.
 """
@@ -73,7 +72,7 @@ class BenchmarkAnalyzer:
         plt.rcParams["figure.figsize"] = [12, 8]
 
     def run_analysis(self):
-        """Run all analysis functions"""
+        """Run all analysis functions."""
         # Generate basic statistics
         self.generate_basic_stats()
 
@@ -96,7 +95,7 @@ class BenchmarkAnalyzer:
         self.create_summary_dashboard()
 
     def generate_basic_stats(self):
-        """Generate basic statistics on the benchmark results"""
+        """Generate basic statistics on the benchmark results."""
         # Filter out errors
         valid_df = self.results_df[~self.results_df["solved"].isna()]
 
@@ -111,7 +110,7 @@ class BenchmarkAnalyzer:
         )
 
         # Save statistics to CSV and JSON
-        stats_by_solver.to_csv(os.path.join(self.output_dir, f"solver_statistics.csv"))
+        stats_by_solver.to_csv(os.path.join(self.output_dir, "solver_statistics.csv"))
 
         # Create a more readable JSON version
         stats_dict = {}
@@ -126,13 +125,13 @@ class BenchmarkAnalyzer:
                 "timeouts": int(row[("timed_out", "sum")]),
             }
 
-        with open(os.path.join(self.output_dir, f"solver_statistics.json"), "w") as f:
+        with open(os.path.join(self.output_dir, "solver_statistics.json"), "w") as f:
             json.dump(stats_dict, f, indent=2)
 
         print(f"Basic statistics saved to {self.output_dir}/solver_statistics.json")
 
     def analyze_time_performance(self):
-        """Analyze and visualize time performance"""
+        """Analyze and visualize time performance."""
         # Focus on solved problems
         solved_df = self.results_df[self.results_df["solved"]]
 
@@ -178,7 +177,7 @@ class BenchmarkAnalyzer:
         plt.close()
 
     def analyze_memory_usage(self):
-        """Analyze and visualize memory usage"""
+        """Analyze and visualize memory usage."""
         # Memory usage distribution by solver
         plt.figure(figsize=(12, 8))
         ax = sns.boxplot(x="solver", y="memory", data=self.results_df)
@@ -217,7 +216,7 @@ class BenchmarkAnalyzer:
         plt.close()
 
     def analyze_success_rates(self):
-        """Analyze and visualize success rates"""
+        """Analyze and visualize success rates."""
         # Success rate by solver
         plt.figure(figsize=(10, 6))
         success_by_solver = self.results_df.groupby("solver")["solved"].mean()
@@ -259,10 +258,10 @@ class BenchmarkAnalyzer:
         plt.close()
 
     def analyze_scalability(self):
-        """Analyze solver scalability with problem size"""
+        """Analyze solver scalability with problem size."""
         # Prepare data - filter out errors and timeouts
         valid_df = self.results_df[
-            (self.results_df["solved"]) & (self.results_df["timed_out"] == False)
+            (self.results_df["solved"]) & (not self.results_df["timed_out"])
         ]
 
         if valid_df.empty:
@@ -313,13 +312,13 @@ class BenchmarkAnalyzer:
                 }
 
         # Save scalability statistics
-        with open(os.path.join(self.output_dir, f"scalability_stats.json"), "w") as f:
+        with open(os.path.join(self.output_dir, "scalability_stats.json"), "w") as f:
             json.dump(scalability_stats, f, indent=2)
 
         print(f"Scalability analysis saved to {self.output_dir}/scalability_stats.json")
 
     def analyze_phase_transition(self):
-        """Analyze solver performance around the phase transition"""
+        """Analyze solver performance around the phase transition."""
         if self.phase_df is None:
             print("No phase transition data available.")
             return
@@ -395,6 +394,7 @@ class BenchmarkAnalyzer:
                 for region_name, (lower, upper) in zip(
                     ["pre-transition", "transition", "post-transition"],
                     [pre_transition, transition, post_transition],
+                    strict=False,
                 ):
                     region_data = solver_data[
                         (solver_data["ratio"] >= lower)
@@ -527,7 +527,7 @@ class BenchmarkAnalyzer:
                 plt.close()
 
     def run_statistical_tests(self):
-        """Run statistical tests to compare solver performance"""
+        """Run statistical tests to compare solver performance."""
         # Filter for solved problems
         solved_df = self.results_df[self.results_df["solved"]].copy()
 
@@ -660,7 +660,7 @@ class BenchmarkAnalyzer:
                     }
 
         # Save statistical test results
-        with open(os.path.join(self.output_dir, f"statistical_tests.json"), "w") as f:
+        with open(os.path.join(self.output_dir, "statistical_tests.json"), "w") as f:
             json.dump(stats_results, f, indent=2)
 
         # Create pairwise comparison summary table
@@ -703,13 +703,13 @@ class BenchmarkAnalyzer:
         if summary_rows:
             summary_df = pd.DataFrame(summary_rows)
             summary_df.to_csv(
-                os.path.join(self.output_dir, f"pairwise_comparison.csv"), index=False
+                os.path.join(self.output_dir, "pairwise_comparison.csv"), index=False
             )
 
         print(f"Statistical tests saved to {self.output_dir}/statistical_tests.json")
 
     def create_summary_dashboard(self):
-        """Create a summary dashboard visualization"""
+        """Create a summary dashboard visualization."""
         plt.figure(figsize=(15, 10))
 
         # 1. Success Rate

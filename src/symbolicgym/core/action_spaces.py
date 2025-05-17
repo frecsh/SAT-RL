@@ -1,6 +1,5 @@
-"""
-Unified symbolic action interface for all domains.
-"""
+"""Unified symbolic action interface for all domains."""
+
 from abc import ABC, abstractmethod
 
 

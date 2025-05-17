@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
-"""
-Functions for generating and manipulating SAT problems.
-"""
+"""Functions for generating and manipulating SAT problems."""
 
 import random
 
@@ -11,8 +9,7 @@ import numpy as np
 def generate_sat_problem(
     n_vars: int, n_clauses: int, clause_length: int = 3, seed: int | None = None
 ) -> list[list[int]]:
-    """
-    Generate a random k-SAT problem.
+    """Generate a random k-SAT problem.
 
     Args:
         n_vars: Number of variables
@@ -42,8 +39,7 @@ def generate_sat_problem(
 
 
 def load_sat_from_file(filepath: str) -> tuple[list[list[int]], int]:
-    """
-    Load a SAT problem from a DIMACS CNF file.
+    """Load a SAT problem from a DIMACS CNF file.
 
     Args:
         filepath: Path to the CNF file
@@ -110,8 +106,7 @@ def load_sat_from_file(filepath: str) -> tuple[list[list[int]], int]:
 
 
 def is_satisfied(clauses: list[list[int]], assignment: list[int]) -> bool:
-    """
-    Check if a given assignment satisfies all clauses.
+    """Check if a given assignment satisfies all clauses.
 
     Args:
         clauses: List of clauses, where each clause is a list of literals
@@ -139,8 +134,7 @@ def is_satisfied(clauses: list[list[int]], assignment: list[int]) -> bool:
 
 
 def count_satisfied_clauses(clauses: list[list[int]], assignment: list[int]) -> int:
-    """
-    Count how many clauses are satisfied by a given assignment.
+    """Count how many clauses are satisfied by a given assignment.
 
     Args:
         clauses: List of clauses, where each clause is a list of literals
@@ -165,8 +159,7 @@ def count_satisfied_clauses(clauses: list[list[int]], assignment: list[int]) -> 
 
 
 def flip_variable(solution: list[int], var_idx: int) -> list[int]:
-    """
-    Flip the value of a variable in the solution.
+    """Flip the value of a variable in the solution.
 
     Args:
         solution: List of variable assignments
@@ -181,8 +174,7 @@ def flip_variable(solution: list[int], var_idx: int) -> list[int]:
 
 
 def random_assignment(n_vars: int, seed: int | None = None) -> list[int]:
-    """
-    Generate a random assignment for a SAT problem.
+    """Generate a random assignment for a SAT problem.
 
     Args:
         n_vars: Number of variables
@@ -204,8 +196,7 @@ def random_walksat(
     random_probability: float = 0.5,
     seed: int | None = None,
 ) -> tuple[list[int] | None, bool]:
-    """
-    Simple WalkSAT implementation to solve SAT problems.
+    """Simple WalkSAT implementation to solve SAT problems.
 
     Args:
         clauses: List of clauses, where each clause is a list of literals
@@ -331,7 +322,7 @@ PROBLEM_COLLECTION = [
 if __name__ == "__main__":
     # Example usage
     problem = generate_sat_problem(20, 85)
-    print(f"Generated random 3-SAT problem with 20 variables and 85 clauses")
+    print("Generated random 3-SAT problem with 20 variables and 85 clauses")
 
     # Try to solve it with WalkSAT
     assignment, solved = random_walksat(problem, 20)
@@ -339,4 +330,4 @@ if __name__ == "__main__":
     if solved:
         print(f"Found solution: {assignment}")
     else:
-        print(f"Could not find solution after max flips")
+        print("Could not find solution after max flips")

@@ -1,18 +1,14 @@
-"""
-Automated Experiment Runner for SymbolicGym
+"""Automated Experiment Runner for SymbolicGym
 - Loads experiment config (YAML/JSON)
 - Sets global seed, logs config/code version
 - Runs batch/parallel experiments (agents x envs x seeds)
 - Stores logs/results in results/ and logs/
-- Optionally integrates with SLURM/cloud batch jobs
+- Optionally integrates with SLURM/cloud batch jobs.
 """
+
 import argparse
 import json
 import multiprocessing as mp
-import os
-import subprocess
-import sys
-from datetime import datetime
 from pathlib import Path
 
 import yaml
@@ -54,7 +50,7 @@ def main():
     args = parser.parse_args()
 
     # Load config
-    with open(args.config, "r") as f:
+    with open(args.config) as f:
         if args.config.endswith(".yaml") or args.config.endswith(".yml"):
             config = yaml.safe_load(f)
         else:

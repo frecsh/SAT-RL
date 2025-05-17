@@ -1,6 +1,5 @@
-"""
-Abstract reward shaping interface and utilities for SymbolicGym.
-"""
+"""Abstract reward shaping interface and utilities for SymbolicGym."""
+
 from abc import ABC, abstractmethod
 
 
@@ -21,9 +20,7 @@ class RewardShaping(ABC):
 
 
 class LinearAnnealingReward(RewardShaping):
-    """
-    Anneals reward from dense to sparse over time.
-    """
+    """Anneals reward from dense to sparse over time."""
 
     def __init__(self, dense_weight=1.0, sparse_weight=0.0, anneal_steps=10000):
         self.dense_weight = dense_weight

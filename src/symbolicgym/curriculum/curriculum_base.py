@@ -1,6 +1,5 @@
-"""
-Abstract curriculum interface for SymbolicGym.
-"""
+"""Abstract curriculum interface for SymbolicGym."""
+
 from abc import ABC, abstractmethod
 
 

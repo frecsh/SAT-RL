@@ -1,15 +1,13 @@
-"""
-Cross-domain latent space projector for SymbolicGym.
-"""
-import numpy as np
+"""Cross-domain latent space projector for SymbolicGym."""
+
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
 from umap import UMAP
 
 
 def project_latent_space(X, method="pca", n_components=2, **kwargs):
-    """
-    Project latent space using PCA, t-SNE, or UMAP.
+    """Project latent space using PCA, t-SNE, or UMAP.
+
     Args:
         X: np.ndarray
         method: 'pca', 'tsne', or 'umap'

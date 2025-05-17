@@ -1,5 +1,4 @@
-"""
-Benchmark script to compare the performance of optimized vs base environment.
+"""Benchmark script to compare the performance of optimized vs base environment.
 
 This script measures the execution time of various operations in both the base
 SymbolicSatEnv and the optimized OptimizedSymbolicSatEnv environments.
@@ -8,7 +7,7 @@ SymbolicSatEnv and the optimized OptimizedSymbolicSatEnv environments.
 import os
 import sys
 import time
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -22,9 +21,8 @@ if project_root not in sys.path:
 from symbolicgym.domains.sat.env import OptimizedSymbolicSatEnv, SymbolicSatEnv
 
 
-def generate_random_sat_formula(num_vars: int, num_clauses: int) -> Dict[str, Any]:
-    """
-    Generate a random SAT formula.
+def generate_random_sat_formula(num_vars: int, num_clauses: int) -> dict[str, Any]:
+    """Generate a random SAT formula.
 
     Args:
         num_vars: Number of variables in the formula
@@ -47,8 +45,7 @@ def generate_random_sat_formula(num_vars: int, num_clauses: int) -> Dict[str, An
 
 
 def benchmark_reset(env: Any, num_trials: int = 100) -> float:
-    """
-    Benchmark the reset method of an environment.
+    """Benchmark the reset method of an environment.
 
     Args:
         env: Environment to benchmark
@@ -65,8 +62,7 @@ def benchmark_reset(env: Any, num_trials: int = 100) -> float:
 
 
 def benchmark_step(env: Any, num_steps: int = 1000) -> float:
-    """
-    Benchmark the step method of an environment.
+    """Benchmark the step method of an environment.
 
     Args:
         env: Environment to benchmark
@@ -85,12 +81,11 @@ def benchmark_step(env: Any, num_steps: int = 1000) -> float:
 
 
 def benchmark_environments(
-    num_vars_list: List[int] = [10, 50, 100, 200, 500],
+    num_vars_list: list[int] = [10, 50, 100, 200, 500],
     clause_var_ratio: float = 4.3,
     num_trials: int = 5,
 ) -> pd.DataFrame:
-    """
-    Benchmark the base and optimized environments on various problem sizes.
+    """Benchmark the base and optimized environments on various problem sizes.
 
     Args:
         num_vars_list: List of variable counts to test
@@ -180,8 +175,7 @@ def benchmark_environments(
 
 
 def plot_results(results: pd.DataFrame, output_dir: str = None) -> None:
-    """
-    Plot benchmark results.
+    """Plot benchmark results.
 
     Args:
         results: DataFrame with benchmark results
@@ -272,8 +266,7 @@ def plot_results(results: pd.DataFrame, output_dir: str = None) -> None:
 def verify_correctness(
     num_vars: int = 100, num_clauses: int = 430, num_steps: int = 1000
 ) -> bool:
-    """
-    Verify that the optimized environment produces the same results as the base environment.
+    """Verify that the optimized environment produces the same results as the base environment.
 
     Args:
         num_vars: Number of variables in the SAT formula

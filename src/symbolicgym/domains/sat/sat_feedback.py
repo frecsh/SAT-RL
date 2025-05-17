@@ -1,6 +1,5 @@
-"""
-SATFeedback: SymbolicFeedback implementation for SAT domain in SymbolicGym.
-"""
+"""SATFeedback: SymbolicFeedback implementation for SAT domain in SymbolicGym."""
+
 import numpy as np
 
 from symbolicgym.core.feedback_vectors import SymbolicFeedbackVector

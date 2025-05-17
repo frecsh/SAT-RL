@@ -2,7 +2,6 @@ import torch
 import torch.nn as nn
 
 from symbolicgym.agents.base_agent import BaseAgent
-from symbolicgym.agents.marl.communication import Message
 
 
 class CommAgent(BaseAgent):

@@ -1,11 +1,9 @@
-"""
-NeuroSAT runner stub for SymbolicGym SAT domain.
-"""
+"""NeuroSAT runner stub for SymbolicGym SAT domain."""
 
 
 def run_neurosat(cnf_clauses, num_vars, model_path=None):
-    """
-    Run NeuroSAT on a CNF problem (stub).
+    """Run NeuroSAT on a CNF problem (stub).
+
     Args:
         cnf_clauses: list of lists (ints)
         num_vars: int

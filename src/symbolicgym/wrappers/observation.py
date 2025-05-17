@@ -1,6 +1,5 @@
-"""
-Observation wrappers for converting between dict, flat, and graph formats.
-"""
+"""Observation wrappers for converting between dict, flat, and graph formats."""
+
 import numpy as np
 
 

@@ -1,23 +1,18 @@
-"""
-SymbolicGym Custom Agent Example
+"""SymbolicGym Custom Agent Example.
 
 This script demonstrates how to implement and train a custom agent
 with the SymbolicGym environment.
 """
 
-import os
 from collections import defaultdict
 
 import gymnasium as gym
 import matplotlib.pyplot as plt
 import numpy as np
 
-import symbolicgym
-
 
 class GreedySATAgent:
-    """
-    Greedy SAT agent that prioritizes flipping variables that appear
+    """Greedy SAT agent that prioritizes flipping variables that appear
     most frequently in unsatisfied clauses.
     """
 
@@ -53,9 +48,7 @@ class GreedySATAgent:
         return self.env.action_space.sample()
 
     def train(self, num_episodes=100):
-        """
-        Train the agent for a specified number of episodes.
-        """
+        """Train the agent for a specified number of episodes."""
         print(f"Training {self.name} for {num_episodes} episodes...")
 
         for episode in range(num_episodes):
@@ -93,7 +86,7 @@ class GreedySATAgent:
             if (episode + 1) % 10 == 0:
                 solved = "Yes" if info.get("solved", False) else "No"
                 print(
-                    f"Episode {episode+1}/{num_episodes}, "
+                    f"Episode {episode + 1}/{num_episodes}, "
                     f"Reward: {episode_reward:.2f}, "
                     f"Steps: {steps}, "
                     f"Max Satisfaction: {max_satisfaction:.2f}, "
@@ -103,9 +96,7 @@ class GreedySATAgent:
         print("Training completed!")
 
     def evaluate(self, num_episodes=20):
-        """
-        Evaluate the agent's performance.
-        """
+        """Evaluate the agent's performance."""
         print(f"\nEvaluating {self.name} for {num_episodes} episodes...")
 
         eval_rewards = []
@@ -144,27 +135,25 @@ class GreedySATAgent:
             eval_steps.append(steps)
 
             print(
-                f"Evaluation Episode {episode+1}: "
+                f"Evaluation Episode {episode + 1}: "
                 f"Reward: {episode_reward:.2f}, "
                 f"Steps: {steps}, "
                 f"Solved: {info.get('solved', False)}"
             )
 
         # Print summary
-        print(f"\nEvaluation Results:")
+        print("\nEvaluation Results:")
         print(f"Average Reward: {np.mean(eval_rewards):.2f}")
         print(f"Average Steps: {np.mean(eval_steps):.2f}")
         print(
             f"Solved: {eval_solved}/{num_episodes} episodes "
-            f"({100*eval_solved/num_episodes:.1f}%)"
+            f"({100 * eval_solved / num_episodes:.1f}%)"
         )
 
         return eval_rewards, eval_steps, eval_solved
 
     def plot_results(self):
-        """
-        Plot training results.
-        """
+        """Plot training results."""
         plt.figure(figsize=(15, 5))
 
         # Plot rewards
@@ -196,9 +185,7 @@ class GreedySATAgent:
 
 
 def create_formula(difficulty="easy"):
-    """
-    Create a SAT formula with specified difficulty.
-    """
+    """Create a SAT formula with specified difficulty."""
     if difficulty == "easy":
         # 3-SAT with 10 variables and 42 clauses (ratio 4.2)
         return {
@@ -250,9 +237,7 @@ def create_formula(difficulty="easy"):
 
 
 def main():
-    """
-    Main function to demonstrate agent training and evaluation.
-    """
+    """Main function to demonstrate agent training and evaluation."""
     # Set random seed for reproducibility
     np.random.seed(42)
 

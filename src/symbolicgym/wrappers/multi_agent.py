@@ -1,7 +1,6 @@
 # Multi-agent wrappers for SymbolicGym environments
-import numpy as np
 from gymnasium import Wrapper
-from gymnasium.spaces import Box, Dict
+from gymnasium.spaces import Dict
 
 
 class MultiAgentWrapper(Wrapper):

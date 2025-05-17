@@ -3,7 +3,6 @@ import re
 import gymnasium as gym
 import numpy as np
 from gymnasium import spaces
-from sympy import sympify
 
 from src.symbolicgym.utils.feedback import get_symbolic_feedback
 
@@ -15,7 +14,7 @@ def tokenize_expression(expr_str):
 
 
 class SymbolicAlgebraEnv(gym.Env):
-    """Symbolic Algebra Environment for RL (MVP)"""
+    """Symbolic Algebra Environment for RL (MVP)."""
 
     def __init__(self, max_steps=20, initial_expression="x + 2 = 4"):
         super().__init__()

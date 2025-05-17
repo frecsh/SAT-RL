@@ -1,6 +1,5 @@
-"""
-Abstract metric collector interface for SymbolicGym.
-"""
+"""Abstract metric collector interface for SymbolicGym."""
+
 from abc import ABC, abstractmethod
 
 

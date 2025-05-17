@@ -1,6 +1,3 @@
-import numpy as np
-
-
 class VecEnv:
     """Vectorized environment with backend caching stub."""
 
@@ -13,4 +10,4 @@ class VecEnv:
         return [env.reset() for env in self.envs]
 
     def step(self, actions):
-        return [env.step(a) for env, a in zip(self.envs, actions)]
+        return [env.step(a) for env, a in zip(self.envs, actions, strict=False)]

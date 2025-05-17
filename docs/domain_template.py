@@ -1,6 +1,4 @@
-"""
-Template for adding a new domain to SymbolicGym.
-"""
+"""Template for adding a new domain to SymbolicGym."""
 
 
 class NewDomainFeedback:

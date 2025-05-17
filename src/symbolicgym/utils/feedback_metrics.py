@@ -1,6 +1,4 @@
-"""
-Utility for mapping feedback vector indices to metric names for SatEnv/SATFeedback.
-"""
+"""Utility for mapping feedback vector indices to metric names for SatEnv/SATFeedback."""
 
 FEEDBACK_VECTOR_METRICS = [
     "clause_satisfaction",  # 0

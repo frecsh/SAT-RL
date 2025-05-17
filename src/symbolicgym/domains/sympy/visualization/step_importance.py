@@ -1,13 +1,12 @@
-"""
-Step importance heatmap for SymPy domain.
-"""
+"""Step importance heatmap for SymPy domain."""
+
 import matplotlib.pyplot as plt
 import numpy as np
 
 
 def plot_step_importance_heatmap(step_importances, ax=None):
-    """
-    Plot a heatmap of step importances.
+    """Plot a heatmap of step importances.
+
     Args:
         step_importances: list or np.ndarray of importances
         ax: matplotlib axis (optional)

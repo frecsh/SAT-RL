@@ -1,22 +1,19 @@
-"""
-Automated Reporting & Visualization for SymbolicGym
+"""Automated Reporting & Visualization for SymbolicGym
 - Aggregates logs/results from results/ and logs/
 - Generates summary tables (solve rates, avg steps, etc.)
 - Produces plots (matplotlib/seaborn)
-- Exports reports as Markdown/HTML/PDF
+- Exports reports as Markdown/HTML/PDF.
 """
+
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import argparse
-import os
 
 import matplotlib.pyplot as plt
 import pandas as pd
-
-from src.symbolicgym.utils import logging as logging_utils
 
 # TODO: Add more imports as needed
 
@@ -44,7 +41,7 @@ def main():
 
     # Compute summary stats
     summary_lines = []
-    summary_lines.append(f"# SymbolicGym Benchmark Summary\n")
+    summary_lines.append("# SymbolicGym Benchmark Summary\n")
     summary_lines.append(f"**Results file:** `{results_file}`\n")
     summary_lines.append(f"**Number of runs:** {len(df)}\n")
 
@@ -73,7 +70,7 @@ def main():
         plt.tight_layout()
         plt.savefig(plots_dir / "solve_rate.png")
         plt.close()
-        summary_lines.append(f"![Solve Rate](plots/solve_rate.png)")
+        summary_lines.append("![Solve Rate](plots/solve_rate.png)")
     if "steps" in df.columns:
         plt.figure()
         df["steps"].plot(title="Steps")
@@ -82,7 +79,7 @@ def main():
         plt.tight_layout()
         plt.savefig(plots_dir / "steps.png")
         plt.close()
-        summary_lines.append(f"![Steps](plots/steps.png)")
+        summary_lines.append("![Steps](plots/steps.png)")
 
     # Export summary tables and plots
     summary_md = "\n".join(summary_lines)

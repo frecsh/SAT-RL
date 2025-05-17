@@ -1,5 +1,4 @@
-"""
-Abstract base class for all symbolic RL environments in SymbolicGym.
+"""Abstract base class for all symbolic RL environments in SymbolicGym.
 Defines the interface for state, action, and feedback integration.
 """
 

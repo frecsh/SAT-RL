@@ -23,7 +23,6 @@ from src.symbolicgym.envs.symbolic_algebra import (
     SymbolicAlgebraEnv,
     tokenize_expression,
 )
-from src.symbolicgym.utils.feedback import get_symbolic_feedback
 
 
 def tokens_to_vec(tokens, vocab):
@@ -44,7 +43,7 @@ vocab = {tok: i for i, tok in enumerate(sorted(all_tokens))}
 if __name__ == "__main__":
     # Load config
     config_path = os.path.join(os.path.dirname(__file__), "config.yaml")
-    with open(config_path, "r") as f:
+    with open(config_path) as f:
         config = yaml.safe_load(f)
 
     # Environment and agent setup

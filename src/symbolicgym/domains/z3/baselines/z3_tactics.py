@@ -1,6 +1,5 @@
-"""
-Z3 baselines for SymbolicGym.
-"""
+"""Z3 baselines for SymbolicGym."""
+
 from z3 import Solver, sat
 
 

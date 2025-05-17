@@ -1,6 +1,4 @@
-"""
-Stub for distributed training runner.
-"""
+"""Stub for distributed training runner."""
 
 
 def run_distributed_training(agent_cls, env_fn, n_workers=4):

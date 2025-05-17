@@ -1,6 +1,4 @@
-"""
-Encoder for crafted SAT problems (n-queens, graph-coloring) for transfer testing in SymbolicGym.
-"""
+"""Encoder for crafted SAT problems (n-queens, graph-coloring) for transfer testing in SymbolicGym."""
 
 
 def encode_n_queens(n):
@@ -39,7 +37,7 @@ def encode_n_queens(n):
 def encode_graph_coloring(graph, num_colors):
     """Return a SAT problem encoding for the graph coloring problem.
     graph: dict {node: [neighbors]}
-    num_colors: int
+    num_colors: int.
     """
     # Variables: x_{v,c} is True if node v has color c
     # Variable numbers: v * num_colors + c + 1

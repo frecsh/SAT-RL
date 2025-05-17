@@ -1,6 +1,4 @@
-"""
-Message recording system for inter-agent communication.
-"""
+"""Message recording system for inter-agent communication."""
 
 
 class MessageRecorder:

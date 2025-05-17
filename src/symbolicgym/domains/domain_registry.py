@@ -1,6 +1,4 @@
-"""
-Domain registration API for extensibility.
-"""
+"""Domain registration API for extensibility."""
 
 
 class DomainRegistry:

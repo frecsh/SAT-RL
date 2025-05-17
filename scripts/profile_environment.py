@@ -1,6 +1,5 @@
-"""
-Profile the SymbolicGym environment to identify performance bottlenecks.
-"""
+"""Profile the SymbolicGym environment to identify performance bottlenecks."""
+
 import cProfile
 import os
 import pstats

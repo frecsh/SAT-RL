@@ -1,7 +1,4 @@
-"""
-SAT auto-curriculum for SymbolicGym.
-"""
-import random
+"""SAT auto-curriculum for SymbolicGym."""
 
 from symbolicgym.curriculum.curriculum_base import CurriculumBase
 

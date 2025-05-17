@@ -1,7 +1,4 @@
-"""
-Random SAT instance generator for benchmarking and experiment suites.
-"""
-import random
+"""Random SAT instance generator for benchmarking and experiment suites."""
 
 import numpy as np
 

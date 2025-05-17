@@ -1,6 +1,5 @@
-"""
-Evaluation script for SymbolicGym: batch experiments, metrics aggregation, and baseline automation.
-"""
+"""Evaluation script for SymbolicGym: batch experiments, metrics aggregation, and baseline automation."""
+
 import sys
 from pathlib import Path
 
@@ -16,7 +15,6 @@ from src.symbolicgym.utils import seed as seed_utils
 from symbolicgym.envs.sat_env import SatEnv
 from symbolicgym.utils.logging import log_metrics_csv
 from symbolicgym.utils.sat_generator import load_cnf
-from symbolicgym.utils.seed import set_global_seed
 
 
 def run_baseline(env, agent_type="random", max_steps=100):

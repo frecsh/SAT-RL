@@ -1,6 +1,4 @@
-"""
-Interpretability metrics for SymbolicGym.
-"""
+"""Interpretability metrics for SymbolicGym."""
 
 import numpy as np
 from scipy.stats import entropy
@@ -19,7 +17,7 @@ def percentage_flips_matching_vsids(agent_flips, oracle_flips):
     """Compute percentage of agent variable flips matching MiniSAT VSIDS picks."""
     if not agent_flips or not oracle_flips:
         return 0.0
-    matches = sum(1 for a, o in zip(agent_flips, oracle_flips) if a == o)
+    matches = sum(1 for a, o in zip(agent_flips, oracle_flips, strict=False) if a == o)
     return 100.0 * matches / min(len(agent_flips), len(oracle_flips))
 
 
@@ -27,7 +25,7 @@ def feedback_vector_alignment(feedback_vectors, human_metrics):
     """Compute alignment (Pearson correlation) between feedback vector dims and human metrics.
     feedback_vectors: np.ndarray shape (n, d)
     human_metrics: np.ndarray shape (n, m)
-    Returns: mean absolute correlation across all pairs
+    Returns: mean absolute correlation across all pairs.
     """
     feedback_vectors = np.array(feedback_vectors)
     human_metrics = np.array(human_metrics)

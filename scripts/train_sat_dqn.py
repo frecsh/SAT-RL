@@ -1,9 +1,7 @@
-"""
-Train a DQN agent on the SAT domain using SymbolicGym.
-"""
+"""Train a DQN agent on the SAT domain using SymbolicGym."""
+
 import gymnasium as gym
 
-import symbolicgym
 from symbolicgym.agents.dqn_agent import DQNAgent
 from symbolicgym.utils.reproducibility import set_seed
 

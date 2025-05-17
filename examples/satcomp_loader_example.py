@@ -1,6 +1,5 @@
-"""
-Example usage of SymbolicGym CNF loader utility.
-"""
+"""Example usage of SymbolicGym CNF loader utility."""
+
 from symbolicgym.utils.cnf import load_cnf_file
 
 # Example: create a small DIMACS file and load it

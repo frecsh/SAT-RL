@@ -1,6 +1,4 @@
-"""
-SymPy domain metrics for SymbolicGym.
-"""
+"""SymPy domain metrics for SymbolicGym."""
 
 
 class SymPyMetrics:

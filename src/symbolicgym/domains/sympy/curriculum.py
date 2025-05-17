@@ -1,7 +1,4 @@
-"""
-SymPy expression complexity curriculum for SymbolicGym.
-"""
-import random
+"""SymPy expression complexity curriculum for SymbolicGym."""
 
 from symbolicgym.curriculum.curriculum_base import CurriculumBase
 

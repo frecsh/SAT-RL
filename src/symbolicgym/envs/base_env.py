@@ -1,6 +1,5 @@
-"""
-BaseEnv: Shared logic for SymbolicGym environments (SAT, SymPy, etc.)
-"""
+"""BaseEnv: Shared logic for SymbolicGym environments (SAT, SymPy, etc.)."""
+
 import gymnasium as gym
 
 

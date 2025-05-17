@@ -1,6 +1,4 @@
-"""
-Registry for pluggable symbolic feedback backends in SymbolicGym.
-"""
+"""Registry for pluggable symbolic feedback backends in SymbolicGym."""
 
 FEEDBACK_REGISTRY = {}
 

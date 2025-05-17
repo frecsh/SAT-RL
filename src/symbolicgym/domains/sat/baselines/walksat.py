@@ -1,15 +1,15 @@
-"""
-WalkSAT integration for SymbolicGym SAT domain.
+"""WalkSAT integration for SymbolicGym SAT domain.
 Requires walksat binary in PATH.
 """
+
 import os
 import subprocess
 import tempfile
 
 
 def run_walksat(cnf_clauses, num_vars, timeout=30, max_flips=10000000):
-    """
-    Run WalkSAT on a CNF problem.
+    """Run WalkSAT on a CNF problem.
+
     Args:
         cnf_clauses: list of lists (ints)
         num_vars: int

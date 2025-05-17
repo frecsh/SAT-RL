@@ -1,14 +1,13 @@
-"""
-Cross-domain message interpretation for SymbolicGym.
-"""
+"""Cross-domain message interpretation for SymbolicGym."""
 
 
 def interpret_message(message, domain):
-    """
-    Interpret a message in the context of a domain.
+    """Interpret a message in the context of a domain.
+
     Args:
         message: any
         domain: str ('sat', 'sympy', 'z3')
+
     Returns:
         interpretation: str
     """

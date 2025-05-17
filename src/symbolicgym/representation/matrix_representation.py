@@ -1,7 +1,5 @@
-"""
-Sparse COO matrix representation for SAT incidence graphs.
-"""
-import numpy as np
+"""Sparse COO matrix representation for SAT incidence graphs."""
+
 from scipy.sparse import coo_matrix
 
 
@@ -20,11 +18,12 @@ def incidence_coo_matrix(num_vars, clauses):
 
 
 def sat_incidence_coo(clauses, num_vars):
-    """
-    Return a sparse COO matrix (shape: [num_vars, num_clauses]) for SAT incidence graph.
+    """Return a sparse COO matrix (shape: [num_vars, num_clauses]) for SAT incidence graph.
+
     Args:
         clauses: List of lists, each inner list is a clause (ints, positive/negative for polarity)
         num_vars: Number of variables (int)
+
     Returns:
         coo_matrix: scipy.sparse.coo_matrix, 1 if var appears in clause, 0 otherwise
     """

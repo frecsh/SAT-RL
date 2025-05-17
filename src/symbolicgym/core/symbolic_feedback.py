@@ -1,5 +1,4 @@
-"""
-SymbolicFeedback interface for pluggable domain feedback in SymbolicGym.
+"""SymbolicFeedback interface for pluggable domain feedback in SymbolicGym.
 Defines the contract for state initialization, action application, and feedback extraction.
 """
 

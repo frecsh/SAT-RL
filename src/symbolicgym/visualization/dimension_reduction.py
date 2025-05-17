@@ -1,11 +1,8 @@
-"""
-Dimensionality reduction and visualization utilities for symbolic feedback vectors.
+"""Dimensionality reduction and visualization utilities for symbolic feedback vectors.
 
 This module provides tools for reducing high-dimensional feedback vectors to
 lower-dimensional representations for visualization and analysis.
 """
-
-from typing import List, Optional, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -41,7 +38,7 @@ class FeedbackDimensionReducer:
         else:
             raise ValueError(f"Unknown reduction method: {self.method}")
 
-    def fit_transform(self, vectors: List[SymbolicFeedbackVector]) -> np.ndarray:
+    def fit_transform(self, vectors: list[SymbolicFeedbackVector]) -> np.ndarray:
         """Fit the reducer and transform the vectors.
 
         Args:
@@ -55,7 +52,7 @@ class FeedbackDimensionReducer:
         self.is_fitted = True
         return reduced
 
-    def transform(self, vectors: List[SymbolicFeedbackVector]) -> np.ndarray:
+    def transform(self, vectors: list[SymbolicFeedbackVector]) -> np.ndarray:
         """Transform new vectors using previously fit reducer.
 
         Args:
@@ -71,9 +68,9 @@ class FeedbackDimensionReducer:
 
     def plot_reduction(
         self,
-        vectors: List[SymbolicFeedbackVector],
-        labels: Optional[List[str]] = None,
-        title: Optional[str] = None,
+        vectors: list[SymbolicFeedbackVector],
+        labels: list[str] | None = None,
+        title: str | None = None,
     ) -> plt.Figure:
         """Create a scatter plot of reduced vectors.
 
@@ -92,7 +89,7 @@ class FeedbackDimensionReducer:
         )
 
         fig, ax = plt.subplots(figsize=(10, 8))
-        scatter = ax.scatter(reduced[:, 0], reduced[:, 1])
+        ax.scatter(reduced[:, 0], reduced[:, 1])
 
         if labels:
             for i, label in enumerate(labels):
@@ -103,16 +100,16 @@ class FeedbackDimensionReducer:
         else:
             ax.set_title(f"{self.method.upper()} Reduction of Feedback Vectors")
 
-        ax.set_xlabel(f"Component 1")
-        ax.set_ylabel(f"Component 2")
+        ax.set_xlabel("Component 1")
+        ax.set_ylabel("Component 2")
 
         return fig
 
 
 def create_trajectory_animation(
-    vectors: List[SymbolicFeedbackVector],
-    labels: Optional[List[str]] = None,
-    title: Optional[str] = None,
+    vectors: list[SymbolicFeedbackVector],
+    labels: list[str] | None = None,
+    title: str | None = None,
 ) -> plt.Figure:
     """Create an animated trajectory of feedback vectors over time.
 

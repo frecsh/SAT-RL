@@ -1,11 +1,9 @@
-"""
-Feedback vector dimension interpreter for SymbolicGym.
-"""
+"""Feedback vector dimension interpreter for SymbolicGym."""
 
 
 def interpret_feedback_vector(feedback_vector, domain):
-    """
-    Interpret feedback vector dimensions for a given domain.
+    """Interpret feedback vector dimensions for a given domain.
+
     Args:
         feedback_vector: np.ndarray or list
         domain: str

@@ -1,6 +1,5 @@
-"""
-SAT domain metrics for SymbolicGym.
-"""
+"""SAT domain metrics for SymbolicGym."""
+
 import time
 
 

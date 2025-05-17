@@ -1,6 +1,5 @@
-"""
-SymPy baselines for SymbolicGym.
-"""
+"""SymPy baselines for SymbolicGym."""
+
 from sympy import Eq, expand, factor, simplify
 
 
@@ -18,4 +17,4 @@ def baseline_factor(expr):
 
 def baseline_prove(equation):
     # Returns True if equation is an identity
-    return Eq(equation.lhs, equation.rhs).simplify() == True
+    return Eq(equation.lhs, equation.rhs).simplify()

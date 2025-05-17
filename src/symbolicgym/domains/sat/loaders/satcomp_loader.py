@@ -1,15 +1,13 @@
-"""
-Loader for industrial SATCOMP traces in DIMACS CNF format for SymbolicGym.
-"""
+"""Loader for industrial SATCOMP traces in DIMACS CNF format for SymbolicGym."""
 
 
 def load_dimacs_cnf(filepath):
     """Load a SAT problem from a DIMACS CNF file.
-    Returns: {'num_vars': int, 'clauses': List[List[int]]}
+    Returns: {'num_vars': int, 'clauses': List[List[int]]}.
     """
     clauses = []
     num_vars = None
-    with open(filepath, "r") as f:
+    with open(filepath) as f:
         for line in f:
             line = line.strip()
             if not line or line.startswith("c"):

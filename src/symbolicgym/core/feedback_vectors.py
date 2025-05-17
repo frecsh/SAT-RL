@@ -1,12 +1,10 @@
-"""
-Multi-dimensional feedback vectors for symbolic reasoning domains.
+"""Multi-dimensional feedback vectors for symbolic reasoning domains.
 
 This module provides utilities for constructing and manipulating rich latent-space
 feedback vectors that capture multiple aspects of symbolic reasoning progress.
 """
 
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional
 
 import numpy as np
 
@@ -24,7 +22,7 @@ class FeedbackDimension:
 class SymbolicFeedbackVector:
     """Rich latent-space feedback vector for symbolic reasoning domains."""
 
-    def __init__(self, dimensions: List[FeedbackDimension]):
+    def __init__(self, dimensions: list[FeedbackDimension]):
         """Initialize feedback vector with specified dimensions.
 
         Args:
@@ -59,7 +57,7 @@ class SymbolicFeedbackVector:
         """Return the feedback vector as a numpy array."""
         return self._values.copy()
 
-    def as_dict(self) -> Dict[str, float]:
+    def as_dict(self) -> dict[str, float]:
         """Return the feedback vector as a dictionary mapping dimension names to values."""
         return {dim.name: self._values[i] for i, dim in enumerate(self.dimensions)}
 

@@ -1,13 +1,12 @@
-"""
-Equation transformation graph visualization for SymPy domain.
-"""
+"""Equation transformation graph visualization for SymPy domain."""
+
 import matplotlib.pyplot as plt
 import networkx as nx
 
 
 def plot_transformation_graph(transformations, ax=None):
-    """
-    Plot a graph of equation transformations.
+    """Plot a graph of equation transformations.
+
     Args:
         transformations: list of (from_expr, to_expr, label)
         ax: matplotlib axis (optional)

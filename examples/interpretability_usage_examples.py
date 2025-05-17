@@ -19,7 +19,7 @@ from symbolicgym.visualization.latent_projector import project_latent_space
 
 # SAT variable-flip heatmap
 flip_counts = np.random.randint(0, 10, size=8)
-plot_variable_flip_heatmap(flip_counts, var_names=[f"x{i+1}" for i in range(8)])
+plot_variable_flip_heatmap(flip_counts, var_names=[f"x{i + 1}" for i in range(8)])
 
 # SAT GNN attention rollout
 attn_weights = [np.random.rand(8, 8) for _ in range(3)]
@@ -64,7 +64,9 @@ print("Feedback interpretation:", interpretation)
 
 # Unified dashboard (example: combine 2 plots)
 fig1, ax1 = plt.subplots()
-plot_variable_flip_heatmap(flip_counts, var_names=[f"x{i+1}" for i in range(8)], ax=ax1)
+plot_variable_flip_heatmap(
+    flip_counts, var_names=[f"x{i + 1}" for i in range(8)], ax=ax1
+)
 fig2, ax2 = plt.subplots()
 plot_step_importance_heatmap(importances, ax=ax2)
 show_dashboard([fig1, fig2], layout=(1, 2))

@@ -1,13 +1,12 @@
-"""
-SAT variable-flip heatmap visualization for SymbolicGym.
-"""
+"""SAT variable-flip heatmap visualization for SymbolicGym."""
+
 import matplotlib.pyplot as plt
 import numpy as np
 
 
 def plot_variable_flip_heatmap(flip_counts, var_names=None, ax=None):
-    """
-    Plot a heatmap of variable flip counts.
+    """Plot a heatmap of variable flip counts.
+
     Args:
         flip_counts: list or np.ndarray of counts per variable
         var_names: list of variable names (optional)

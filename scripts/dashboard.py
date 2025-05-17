@@ -1,8 +1,8 @@
-"""
-Minimal Dashboard for SymbolicGym Results
+"""Minimal Dashboard for SymbolicGym Results
 - Loads logs/results and provides interactive visualization
-- Optionally use Streamlit for web-based dashboard
+- Optionally use Streamlit for web-based dashboard.
 """
+
 import sys
 from pathlib import Path
 
@@ -38,7 +38,7 @@ def main():
     except ImportError:
         import importlib
 
-        logging_utils = importlib.import_module("src.symbolicgym.utils.logging")
+        importlib.import_module("src.symbolicgym.utils.logging")
 
     if STREAMLIT_AVAILABLE:
         st.title("SymbolicGym Results Dashboard")

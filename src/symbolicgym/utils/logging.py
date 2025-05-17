@@ -1,6 +1,5 @@
-"""
-Advanced metrics logging for SymbolicGym benchmarking and evaluation.
-"""
+"""Advanced metrics logging for SymbolicGym benchmarking and evaluation."""
+
 import csv
 import json
 import logging
